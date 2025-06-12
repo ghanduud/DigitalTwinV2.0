@@ -24,7 +24,7 @@
     "RoofFloorArea": 0,
     "Price": 1100000,
     "Discount": 10,
-    "Status": "Reserved",
+    "Status": "Available",
     "NumberOfFloors": "1"
   },
   {
@@ -37,7 +37,7 @@
     "FirstFloorArea": 0,
     "RoofFloorArea": 0,
     "Price": 1200000,
-    "Discount": 15,
+    "Discount": 0,
     "Status": "Sold",
     "NumberOfFloors": "1"
   },
@@ -66,7 +66,7 @@
     "RoofFloorArea": 0,
     "Price": 2000000,
     "Discount": 5,
-    "Status": "Reserved",
+    "Status": "Available",
     "NumberOfFloors": "2"
   },
   {
@@ -79,7 +79,7 @@
     "FirstFloorArea": 250,
     "RoofFloorArea": 0,
     "Price": 2100000,
-    "Discount": 7,
+    "Discount": 0,
     "Status": "Sold",
     "NumberOfFloors": "2"
   },
@@ -108,7 +108,7 @@
     "RoofFloorArea": 300,
     "Price": 5500000,
     "Discount": 12,
-    "Status": "Reserved",
+    "Status": "Available",
     "NumberOfFloors": "3"
   },
   {
@@ -121,7 +121,7 @@
     "FirstFloorArea": 300,
     "RoofFloorArea": 300,
     "Price": 6000000,
-    "Discount": 20,
+    "Discount": 0,
     "Status": "Sold",
     "NumberOfFloors": "3"
   }

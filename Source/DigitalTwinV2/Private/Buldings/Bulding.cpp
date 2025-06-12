@@ -52,7 +52,9 @@ void ABulding::ApplyBuildingData(const FBuildingData& Data)
     else if (Data.Status == "UnderConstruction") Status = EBuildingStatus::UnderConstruction;
     // Set bIsAvailable for filter logic
     bIsAvailable = (Status == EBuildingStatus::Available);
-    UE_LOG(LogTemp, Warning, TEXT("[ApplyBuildingData] %s: Status=%s, bIsAvailable=%s"), *DisplayName, *Data.Status, bIsAvailable ? TEXT("true") : TEXT("false"));
+    // Set bHasDiscount for discount filter logic
+    bHasDiscount = (Discount > 0.0f);
+    UE_LOG(LogTemp, Warning, TEXT("[ApplyBuildingData] %s: Status=%s, bIsAvailable=%s, Discount=%.2f, bHasDiscount=%s"), *DisplayName, *Data.Status, bIsAvailable ? TEXT("true") : TEXT("false"), Discount, bHasDiscount ? TEXT("true") : TEXT("false"));
     // BuildingType conversion if needed
 }
 

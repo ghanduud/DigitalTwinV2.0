@@ -45,6 +45,28 @@ public:
 
 	TArray<UCheckBox*> AvailabilityCheckBoxes;
 
+	UPROPERTY(meta = (BindWidget))
+	UCheckBox* DiscountStandAloneVillaCheck;
+
+	UPROPERTY(meta = (BindWidget))
+	UCheckBox* DiscountOneStoryVillaCheck;
+
+	UPROPERTY(meta = (BindWidget))
+	UCheckBox* DiscountPalaceCheck;
+
+	TArray<UCheckBox*> DiscountCheckBoxes;
+
+	UPROPERTY(meta = (BindWidget))
+	UCheckBox* SoldStandAloneVillaCheck;
+
+	UPROPERTY(meta = (BindWidget))
+	UCheckBox* SoldOneStoryVillaCheck;
+
+	UPROPERTY(meta = (BindWidget))
+	UCheckBox* SoldPalaceCheck;
+
+	TArray<UCheckBox*> SoldCheckBoxes;
+
 
 
 	protected:
@@ -66,6 +88,24 @@ public:
 
 	UFUNCTION()
 	void AvailablePalaceCheckChanged(bool bIsChecked);
+
+	UFUNCTION()
+	void DiscountStandAloneVillaCheckChanged(bool bIsChecked);
+
+	UFUNCTION()
+	void DiscountOneStoryVillaCheckChanged(bool bIsChecked);
+
+	UFUNCTION()
+	void DiscountPalaceCheckChanged(bool bIsChecked);
+
+	UFUNCTION()
+	void SoldStandAloneVillaCheckChanged(bool bIsChecked);
+
+	UFUNCTION()
+	void SoldOneStoryVillaCheckChanged(bool bIsChecked);
+
+	UFUNCTION()
+	void SoldPalaceCheckChanged(bool bIsChecked);
 
 	void HandleExclusiveCheck(UCheckBox* CheckedOne);
 };

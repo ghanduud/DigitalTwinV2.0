@@ -95,6 +95,8 @@ public:
     int32 DataIndex = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
     bool bIsAvailable = false;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Building")
+    bool bHasDiscount = false;
 
     // Function to apply data from a struct
     void ApplyBuildingData(const struct FBuildingData& Data);
