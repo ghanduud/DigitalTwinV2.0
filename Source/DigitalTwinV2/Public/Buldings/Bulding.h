@@ -27,12 +27,10 @@ enum class EBuildingType : uint8
 UCLASS()
 class DIGITALTWINV2_API ABulding : public AActor
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 public:
 	ABulding();
-protected:
 	virtual void BeginPlay() override;
-public:
 	virtual void Tick(float DeltaTime) override;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	int32 Id;
@@ -58,6 +56,10 @@ public:
 	EBuildingType BuildingType;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
 	FString ImagePath;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Info")
+	FString DisplayName;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Building Info")
+    FString NumberOfFloors;
 	UFUNCTION(BlueprintCallable, Category = "Building")
 	float GetFinalPrice() const
 	{

@@ -33,51 +33,13 @@ ABulding::ABulding()
 // Called when the game starts or when spawned
 void ABulding::BeginPlay()
 {
-	Super::BeginPlay();
-	switch (Id)
-	{
-	case 1: // One Story Villa
-		BuildingType = EBuildingType::OneStoryVilla;
-		FootPrintArea = 228.f;
-		BuldingUnitArea = 228.f;
-		GroundFloorArea = 228.f;
-		FirstFloorArea = 0.f;
-		RoofFloorArea = 0.f;
-		Status = EBuildingStatus::Available;
-		Discount = 0.f;
-		Price = 1000000.f;
-		break;
-	case 2: // Palace
-		BuildingType = EBuildingType::Palace;
-		FootPrintArea = 600.f;
-		BuldingUnitArea = 1547.f;
-		GroundFloorArea = 498.f;
-		FirstFloorArea = 529.f;
-		RoofFloorArea = 204.f;
-		Status = EBuildingStatus::Sold;
-		Discount = 0.f;
-		Price = 5000000.f;
-		break;
-	case 3: // Stand Alone Villa
-		BuildingType = EBuildingType::StandAloneVilla;
-		FootPrintArea = 128.f;
-		BuldingUnitArea = 255.f;
-		GroundFloorArea = 93.f;
-		FirstFloorArea = 121.f;
-		RoofFloorArea = 41.f;
-		Status = EBuildingStatus::Available;
-		Discount = 10.f;
-		Price = 1500000.f;
-		break;
-	default:
-		break;
-	}
+	AActor::BeginPlay();
+	// Initialization moved to derived classes
 }
 
 // Called every frame
 void ABulding::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-
+	AActor::Tick(DeltaTime);
 }
 

@@ -38,4 +38,34 @@ protected:
 	/** Image widget to display the texture */
 	UPROPERTY(meta = (BindWidget))
 	UImage* UnitImage;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* TextBlock_Title;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* TextBlock_FootprintArea;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* TextBlock_UnitArea;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* TextBlock_GroundFloor;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* TextBlock_FirstFloor;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* TextBlock_RoofFloor;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* TextBlock_Price;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* NumberOfFloors;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* TextBlock_Discount;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* TextBlock_Availability;
 };
