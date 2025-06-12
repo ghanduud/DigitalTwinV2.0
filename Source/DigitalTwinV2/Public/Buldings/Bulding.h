@@ -93,6 +93,8 @@ public:
     FString NumberOfFloors;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Data")
     int32 DataIndex = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    bool bIsAvailable = false;
 
     // Function to apply data from a struct
     void ApplyBuildingData(const struct FBuildingData& Data);
@@ -117,6 +119,11 @@ public:
 	class UStaticMeshComponent* Mesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UBoxComponent* BoxCollider;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    UStaticMeshComponent* HighlightBox;
+
+	UFUNCTION()
+    void ShowHighlightBox(FLinearColor Color);
 
 	static TArray<FBuildingData> AllBuildingData;
     static void LoadBuildingDataFromJson();
