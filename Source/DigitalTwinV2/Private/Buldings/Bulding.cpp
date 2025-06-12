@@ -126,7 +126,6 @@ void ABulding::BeginPlay()
         ApplyBuildingData(Filtered[DataIndex]);
     }
 
-    // ⭐️ Adjust HighlightBox to fit the building
     FBox Bounds = Mesh->Bounds.GetBox();
     FVector BoxExtent = Bounds.GetExtent();
     FVector Origin = Bounds.GetCenter();
