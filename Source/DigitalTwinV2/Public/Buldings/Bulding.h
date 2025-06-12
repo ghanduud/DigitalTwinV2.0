@@ -24,6 +24,37 @@ enum class EBuildingType : uint8
     StandAloneVilla   UMETA(DisplayName = "Stand Alone Villa")
 };
 
+USTRUCT(BlueprintType)
+struct FBuildingData
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString DisplayName;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString BuildingType;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString ImagePath;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float FootPrintArea = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float BuldingUnitArea = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float GroundFloorArea = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float FirstFloorArea = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float RoofFloorArea = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Price = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float Discount = 0.f;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString Status;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    FString NumberOfFloors;
+};
+
 UCLASS()
 class DIGITALTWINV2_API ABulding : public AActor
 {
@@ -60,6 +91,11 @@ public:
 	FString DisplayName;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Building Info")
     FString NumberOfFloors;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Data")
+    int32 DataIndex = 0;
+
+    // Function to apply data from a struct
+    void ApplyBuildingData(const struct FBuildingData& Data);
 	UFUNCTION(BlueprintCallable, Category = "Building")
 	float GetFinalPrice() const
 	{
@@ -81,4 +117,7 @@ public:
 	class UStaticMeshComponent* Mesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	class UBoxComponent* BoxCollider;
+
+	static TArray<FBuildingData> AllBuildingData;
+    static void LoadBuildingDataFromJson();
 };
