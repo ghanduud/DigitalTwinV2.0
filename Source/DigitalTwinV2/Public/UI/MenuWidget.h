@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "MenuWidget.generated.h"
-
+class UButton; 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTapChanged, EMenuTap, NewTap);
 
 /**
@@ -24,6 +24,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = "UI")
 	class ATwinUiManager* UiManager;
+	UPROPERTY(meta = (BindWidget))
+	UButton* GolfGameButton;
+
 
 protected:
 	UPROPERTY(meta = (BindWidget))

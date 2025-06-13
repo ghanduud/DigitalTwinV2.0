@@ -57,8 +57,10 @@ void UOverviewWidget::SetBuilding(ABulding* NewBuilding)
         return;
     }
 
+     // Update image
     SetUnitImageFromPath(NewBuilding->ImagePath.IsEmpty() ? DefaultImagePath : NewBuilding->ImagePath);
 
+    // Update display name
     if (TextBlock_Title)
     {
         TextBlock_Title->SetText(FText::FromString(NewBuilding->DisplayName));

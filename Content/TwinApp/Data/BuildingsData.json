@@ -124,5 +124,19 @@
     "Discount": 0,
     "Status": "Sold",
     "NumberOfFloors": "3"
+  },
+  {
+    "DisplayName": "Golf Club",
+    "BuildingType": "GolfClub",
+    "ImagePath": "/Game/TwinApp/Buldings/Images/GolfClub.GolfClub",
+    "FootPrintArea": 0,
+    "BuldingUnitArea": 0,
+    "GroundFloorArea": 0,
+    "FirstFloorArea": 0,
+    "RoofFloorArea": 0,
+    "Price": 0,
+    "Discount": 0,
+    "Status": "N/A",
+    "NumberOfFloors": "N/A"
   }
 ]

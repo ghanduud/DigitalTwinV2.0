@@ -106,15 +106,16 @@ void ABulding::BeginPlay()
 	LoadBuildingDataFromJson();
 
     FString ThisType;
-    switch (BuildingType)
+     switch (BuildingType)
     {
         case EBuildingType::OneStoryVilla: ThisType = "OneStoryVilla"; break;
         case EBuildingType::Palace: ThisType = "Palace"; break;
         case EBuildingType::StandAloneVilla: ThisType = "StandaloneVilla"; break;
+        case EBuildingType::GolfClub: ThisType = "GolfClub"; break; // Ensure GolfClub is included
         default: break;
     }
 
-    TArray<FBuildingData> Filtered;
+     TArray<FBuildingData> Filtered;
     for (const FBuildingData& Data : AllBuildingData)
     {
         if (Data.BuildingType == ThisType)

@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "Bulding.generated.h"
 
-
 UENUM(BlueprintType)
 enum class EBuildingStatus : uint8
 {
@@ -19,9 +18,10 @@ enum class EBuildingStatus : uint8
 UENUM(BlueprintType)
 enum class EBuildingType : uint8
 {
-    OneStoryVilla     UMETA(DisplayName = "One Story Villa"),
-    Palace            UMETA(DisplayName = "Palace"),
-    StandAloneVilla   UMETA(DisplayName = "Stand Alone Villa")
+    StandAloneVilla UMETA(DisplayName = "Stand Alone Villa"),
+    OneStoryVilla UMETA(DisplayName = "One Story Villa"),
+    Palace UMETA(DisplayName = "Palace"),
+    GolfClub UMETA(DisplayName = "Golf Club")
 };
 
 USTRUCT(BlueprintType)
