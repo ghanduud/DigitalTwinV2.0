@@ -106,7 +106,7 @@ void ABirdEye::Tick(float DeltaTime)
 				float Delta = CurrentDistance - PreviousTouchDistance;
 
 				// Scale the zoom sensitivity
-				float ZoomDelta = Delta * 0.2f;
+				float ZoomDelta = Delta * 0.1f;
 				ApplyZoom(ZoomDelta);
 			}
 
