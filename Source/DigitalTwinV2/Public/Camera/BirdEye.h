@@ -76,6 +76,13 @@ private:
 	float PendingZoomInput = 0.0f;
 	float ZoomVelocity = 0.0f;
 
+private:
+    FVector2D Touch1Location;
+    FVector2D Touch2Location;
+    bool bTouch1Down = false;
+    bool bTouch2Down = false;
+    float PreviousTouchDistance = 0.0f;
+
 
 
 

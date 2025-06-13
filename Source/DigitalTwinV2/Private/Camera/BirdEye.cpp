@@ -65,6 +65,11 @@ void ABirdEye::BeginPlay()
 	// Set default camera arm length and enable input by default
 	SetCameraArmLength(40000.f);
 	SetInputEnabled(false);;
+
+	FVector2D Temp1, Temp2;
+
+	PlayerController->GetInputTouchState(ETouchIndex::Touch1, Temp1.X, Temp1.Y, bTouch1Down);
+	PlayerController->GetInputTouchState(ETouchIndex::Touch2, Temp2.X, Temp2.Y, bTouch2Down);
 }
 
 void ABirdEye::Tick(float DeltaTime)
@@ -83,6 +88,36 @@ void ABirdEye::Tick(float DeltaTime)
 	}
 
 	HandleSmoothZoom(DeltaTime);
+
+	if (bTouch1Down && bTouch2Down)
+	{
+		FVector2D CurrentTouch1, CurrentTouch2;
+
+		// Get the current positions
+		PlayerController->GetInputTouchState(ETouchIndex::Touch1, CurrentTouch1.X, CurrentTouch1.Y, bTouch1Down);
+		PlayerController->GetInputTouchState(ETouchIndex::Touch2, CurrentTouch2.X, CurrentTouch2.Y, bTouch2Down);
+
+		if (bTouch1Down && bTouch2Down)
+		{
+			float CurrentDistance = FVector2D::Distance(CurrentTouch1, CurrentTouch2);
+
+			if (!FMath::IsNearlyZero(PreviousTouchDistance))
+			{
+				float Delta = CurrentDistance - PreviousTouchDistance;
+
+				// Scale the zoom sensitivity
+				float ZoomDelta = Delta * 0.2f;
+				ApplyZoom(ZoomDelta);
+			}
+
+			PreviousTouchDistance = CurrentDistance;
+		}
+	}
+
+	if (!bTouch1Down || !bTouch2Down)
+	{
+		PreviousTouchDistance = 0.0f;
+	}
 }
 
 
@@ -258,10 +293,28 @@ FVector2D ABirdEye::CalculateMomentumVelocity(float DragDuration, const FVector2
 
 void ABirdEye::CheckForClickTarget()
 {
-	if (!PlayerController || bIsDragging || TotalDragDelta.Size() > ClickMaxDragDistance) return;
+	if (!PlayerController || bIsDragging || TotalDragDelta.Size() > ClickMaxDragDistance)
+		return;
 
 	FHitResult HitResult;
-	if (PlayerController->GetHitResultUnderCursor(ECC_Visibility, false, HitResult))
+	bool bHitSuccess = false;
+
+	bHitSuccess = PlayerController->GetHitResultUnderCursor(ECC_Visibility, false, HitResult);
+
+	if (!bHitSuccess)
+	{
+		FVector2D ScreenPosition;
+		bool bTouchDown = false;
+
+		PlayerController->GetInputTouchState(ETouchIndex::Touch1, ScreenPosition.X, ScreenPosition.Y, bTouchDown);
+
+		if (bTouchDown || TotalDragDelta.IsNearlyZero())
+		{
+			bHitSuccess = PlayerController->GetHitResultAtScreenPosition(ScreenPosition, ECC_Visibility, false, HitResult);
+		}
+	}
+
+	if (bHitSuccess)
 	{
 		if (ABulding* HitBuilding = Cast<ABulding>(HitResult.GetActor()))
 		{
@@ -270,6 +323,8 @@ void ABirdEye::CheckForClickTarget()
 		}
 	}
 }
+
+
 
 void ABirdEye::FocusCameraOnBuilding(AActor* TargetActor)
 {
