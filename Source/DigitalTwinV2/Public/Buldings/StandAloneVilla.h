@@ -13,5 +13,8 @@ UCLASS()
 class DIGITALTWINV2_API AStandAloneVilla : public ABulding
 {
 	GENERATED_BODY()
-	
+public:
+	AStandAloneVilla();
+protected:
+	virtual void BeginPlay() override;
 };

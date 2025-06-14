@@ -1,5 +1,6 @@
 #include "UI/OverviewWidget.h"
 #include "Components/Image.h"
+#include "Components/TextBlock.h"
 #include "Engine/Texture2D.h"
 #include "Engine/StreamableManager.h"
 #include "Engine/AssetManager.h"
@@ -48,25 +49,56 @@ void UOverviewWidget::SetUnitImageFromPath(const FString& AssetPath)
                                 });
 }
 
-
-
 void UOverviewWidget::SetBuilding(ABulding* NewBuilding)
 {
     if (!NewBuilding)
     {
-        // Show the default image if no building is selected
         SetUnitImageFromPath(DefaultImagePath);
         return;
     }
 
-    // Show building image if path is valid, otherwise fallback to default image
-    if (!NewBuilding->ImagePath.IsEmpty())
+     // Update image
+    SetUnitImageFromPath(NewBuilding->ImagePath.IsEmpty() ? DefaultImagePath : NewBuilding->ImagePath);
+
+    // Update display name
+    if (TextBlock_Title)
     {
-        SetUnitImageFromPath(NewBuilding->ImagePath);
+        TextBlock_Title->SetText(FText::FromString(NewBuilding->DisplayName));
     }
-    else
+
+    if (TextBlock_FootprintArea)
+        TextBlock_FootprintArea->SetText(NewBuilding->FootPrintArea == 0.f ? FText::FromString(TEXT("N/A")) : FText::AsNumber(NewBuilding->FootPrintArea));
+
+    if (TextBlock_UnitArea)
+        TextBlock_UnitArea->SetText(NewBuilding->BuldingUnitArea == 0.f ? FText::FromString(TEXT("N/A")) : FText::AsNumber(NewBuilding->BuldingUnitArea));
+
+    if (TextBlock_GroundFloor)
+        TextBlock_GroundFloor->SetText(NewBuilding->GroundFloorArea == 0.f ? FText::FromString(TEXT("N/A")) : FText::AsNumber(NewBuilding->GroundFloorArea));
+
+    if (TextBlock_FirstFloor)
+        TextBlock_FirstFloor->SetText(NewBuilding->FirstFloorArea == 0.f ? FText::FromString(TEXT("N/A")) : FText::AsNumber(NewBuilding->FirstFloorArea));
+
+    if (TextBlock_RoofFloor)
+        TextBlock_RoofFloor->SetText(NewBuilding->RoofFloorArea == 0.f ? FText::FromString(TEXT("N/A")) : FText::AsNumber(NewBuilding->RoofFloorArea));
+
+    if (TextBlock_Price)
     {
-        SetUnitImageFromPath(DefaultImagePath);
+        FString PriceStr = FString::Printf(TEXT("EGP %.0f"), NewBuilding->Price);
+        TextBlock_Price->SetText(FText::FromString(PriceStr));
     }
+
+    if (TextBlock_Discount)
+    {
+        if (NewBuilding->Discount == 0.f)
+            TextBlock_Discount->SetText(FText::FromString(TEXT("N/A")));
+        else
+            TextBlock_Discount->SetText(FText::Format(NSLOCTEXT("Overview", "DiscountFormat", "{0}%"), FText::AsNumber(NewBuilding->Discount)));
+    }
+
+    if (TextBlock_Availability)
+        TextBlock_Availability->SetText(FText::FromString(NewBuilding->GetStatusAsString()));
+
+    if (NumberOfFloors)
+        NumberOfFloors->SetText(FText::FromString(NewBuilding->NumberOfFloors));
 }
 

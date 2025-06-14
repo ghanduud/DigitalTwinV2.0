@@ -3,3 +3,14 @@
 
 #include "Buldings/OneStoryVilla.h"
 
+AOneStoryVilla::AOneStoryVilla()
+{
+    BuildingType = EBuildingType::OneStoryVilla;
+}
+
+void AOneStoryVilla::BeginPlay()
+{
+    Super::BeginPlay();
+    // Additional logic if needed
+}
+

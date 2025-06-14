@@ -140,6 +140,9 @@ public:
 
 	UFUNCTION()
 	void OnIntroSequenceFinished();
+	
+	UFUNCTION()
+    void OnGolfGameButtonClicked();
 };
 
 

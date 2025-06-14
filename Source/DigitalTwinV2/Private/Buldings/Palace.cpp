@@ -3,3 +3,14 @@
 
 #include "Buldings/Palace.h"
 
+APalace::APalace()
+{
+    BuildingType = EBuildingType::Palace;
+}
+
+void APalace::BeginPlay()
+{
+    Super::BeginPlay();
+    // Additional logic if needed
+}
+

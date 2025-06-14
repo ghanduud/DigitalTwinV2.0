@@ -13,5 +13,8 @@ UCLASS()
 class DIGITALTWINV2_API APalace : public ABulding
 {
 	GENERATED_BODY()
-	
+public:
+	APalace();
+protected:
+	virtual void BeginPlay() override;
 };
