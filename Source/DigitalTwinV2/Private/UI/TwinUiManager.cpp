@@ -1,5 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "EngineUtils.h"
 
 #include "UI/TwinUiManager.h"
 #include "Blueprint/UserWidget.h"
@@ -80,8 +81,6 @@ void ATwinUiManager::BeginPlay()
 		}
 	}
 
-
-
 }
 
 // // Called every frame
@@ -134,7 +133,22 @@ void ATwinUiManager::UpdateUIVisibility()
              CurrentBuilding->BuildingType == EBuildingType::StandAloneVilla);
         WOverview->SetVisibility(bShowOverview ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
     }
-    if (WFilter) { WFilter->SetVisibility(CurrentTap == EMenuTap::Filters ? ESlateVisibility::Visible : ESlateVisibility::Collapsed); }
+    if (WFilter) {
+        WFilter->SetVisibility(CurrentTap == EMenuTap::Filters ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+        // Hide all highlights if not in Filters tab
+        if (CurrentTap != EMenuTap::Filters) {
+            UWorld* World = GetWorld();
+            if (World && WFilter) {
+                for (TActorIterator<ABulding> It(World); It; ++It) {
+                    ABulding* Building = *It;
+                    if (Building && Building->HighlightBox) {
+                        Building->HighlightBox->SetVisibility(false);
+                        Building->HighlightBox->SetHiddenInGame(true);
+                    }
+                }
+            }
+        }
+    }
 }
 
 
