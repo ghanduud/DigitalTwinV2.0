@@ -120,16 +120,21 @@ void ATwinUiManager::SetCurrentWeather(EWeather NewWeather)
 
 void ATwinUiManager::UpdateUIVisibility()
 {
-	if (DayAndNightSlider)
-	{
-		DayAndNightSlider->SetVisibility(CurrentTap == EMenuTap::Atmosphere ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-	}
+    if (DayAndNightSlider)
+    {
+        DayAndNightSlider->SetVisibility(CurrentTap == EMenuTap::Atmosphere ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+    }
 
-	if (WOverview)
-	{
-		WOverview->SetVisibility(CurrentTap == EMenuTap::Overview ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-	}
-	if (WFilter) { WFilter->SetVisibility(CurrentTap == EMenuTap::Filters ? ESlateVisibility::Visible : ESlateVisibility::Collapsed); }
+    // Only show Overview if Overview tab is selected AND a valid building is selected
+    if (WOverview)
+    {
+        bool bShowOverview = (CurrentTap == EMenuTap::Overview) && CurrentBuilding &&
+            (CurrentBuilding->BuildingType == EBuildingType::OneStoryVilla ||
+             CurrentBuilding->BuildingType == EBuildingType::Palace ||
+             CurrentBuilding->BuildingType == EBuildingType::StandAloneVilla);
+        WOverview->SetVisibility(bShowOverview ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
+    }
+    if (WFilter) { WFilter->SetVisibility(CurrentTap == EMenuTap::Filters ? ESlateVisibility::Visible : ESlateVisibility::Collapsed); }
 }
 
 
