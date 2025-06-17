@@ -2,7 +2,7 @@
 
 
 #include "GolfGame/UI/GolfGameUI.h"
-#include "GameMode/GolfGameGameMode.h"
+#include "GolfGame/GolfGameManager.h"
 #include "Kismet/GameplayStatics.h"           // For UGameplayStatics::GetGameMode
 #include "Components/Button.h"  
 
@@ -28,9 +28,11 @@ void UGolfGameUI::NativeConstruct()
 
 
 
+
+
 void UGolfGameUI::HandleLongShotClicked()
 {
-    if (AGolfGameGameMode* GM = Cast<AGolfGameGameMode>(UGameplayStatics::GetGameMode(GetWorld())))
+    if (AGolfGameManager* GM = AGolfGameManager::Get())
     {
         GM->SetShotTypeToLong();
     }
@@ -38,7 +40,7 @@ void UGolfGameUI::HandleLongShotClicked()
 
 void UGolfGameUI::HandleShortShotClicked()
 {
-    if (AGolfGameGameMode* GM = Cast<AGolfGameGameMode>(UGameplayStatics::GetGameMode(GetWorld())))
+    if (AGolfGameManager* GM = AGolfGameManager::Get())
     {
         GM->SetShotTypeToShort();
     }
@@ -46,7 +48,7 @@ void UGolfGameUI::HandleShortShotClicked()
 
 void UGolfGameUI::HandleChipShotClicked()
 {
-    if (AGolfGameGameMode* GM = Cast<AGolfGameGameMode>(UGameplayStatics::GetGameMode(GetWorld())))
+    if (AGolfGameManager* GM = AGolfGameManager::Get())
     {
         GM->SetShotTypeToChip();
     }

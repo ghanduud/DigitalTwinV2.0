@@ -8,7 +8,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
-#include "GameMode/GolfGameGameMode.h"
+#include "GolfGame/GolfGameManager.h" // Make sure this is included
 
 void AGolfController::BeginPlay()
 {
@@ -37,10 +37,13 @@ void AGolfController::SetupInputComponent()
     }
 }
 
+
+
 void AGolfController::HandleScreenPress(const FInputActionValue& Value)
 {
     UE_LOG(LogTemp, Log, TEXT("Started adjusting shot."));
-    if (AGolfGameGameMode* GM = GetWorld()->GetAuthGameMode<AGolfGameGameMode>())
+
+    if (AGolfGameManager* GM = AGolfGameManager::Get())
     {
         GM->BeginAdjustShot();
     }
@@ -48,7 +51,7 @@ void AGolfController::HandleScreenPress(const FInputActionValue& Value)
 
 void AGolfController::HandleScreenRelease(const FInputActionValue& Value)
 {
-    if (AGolfGameGameMode* GM = GetWorld()->GetAuthGameMode<AGolfGameGameMode>())
+    if (AGolfGameManager* GM = AGolfGameManager::Get())
     {
         GM->Shoot();
     }
@@ -56,7 +59,7 @@ void AGolfController::HandleScreenRelease(const FInputActionValue& Value)
 
 void AGolfController::HandleScreenMove(const FInputActionValue& Value)
 {
-    if (AGolfGameGameMode* GM = GetWorld()->GetAuthGameMode<AGolfGameGameMode>())
+    if (AGolfGameManager* GM = AGolfGameManager::Get())
     {
         FVector2D Delta = Value.Get<FVector2D>();
         GM->AdjustShot(Delta);

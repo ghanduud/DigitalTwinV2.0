@@ -136,30 +136,30 @@ void ATwinUiManager::UpdateUIVisibility()
 
 void ATwinUiManager::SetCurrentBuilding(ABulding* NewBuilding)
 {
-    if (CurrentBuilding != NewBuilding)
-    {
-        CurrentBuilding = NewBuilding;
-        OnCurrentBuildingChanged.Broadcast(CurrentBuilding);
+	if (CurrentBuilding != NewBuilding)
+	{
+		CurrentBuilding = NewBuilding;
+		OnCurrentBuildingChanged.Broadcast(CurrentBuilding);
 
-        // Check if the current building is a GolfClubBuilding
-        if (Menu && Menu->GolfGameButton)
-        {
-            if (Cast<AGolfClubBuilding>(CurrentBuilding))
-            {
-                if (UWidget* GolfWidget = Cast<UWidget>(Menu->GolfGameButton))
+		// Check if the current building is a GolfClubBuilding
+		if (Menu && Menu->GolfGameButton)
+		{
+			if (Cast<AGolfClubBuilding>(CurrentBuilding))
+			{
+				if (UWidget* GolfWidget = Cast<UWidget>(Menu->GolfGameButton))
 				{
 					GolfWidget->SetVisibility(ESlateVisibility::Visible);
 				}
-            }
-            else
-           {
+			}
+			else
+			{
 				if (UWidget* GolfWidget = Cast<UWidget>(Menu->GolfGameButton))
 				{
 					GolfWidget->SetVisibility(ESlateVisibility::Collapsed);
 				}
 			}
-        }
-    }
+		}
+	}
 }
 
 
@@ -183,26 +183,26 @@ void ATwinUiManager::ResetCameraAndBuilding()
 
 void ATwinUiManager::OnIntroSequenceFinished()
 {
-    if (MenuWidgetClass)
-    {
-        Menu = CreateWidget<UMenuWidget>(GetWorld(), MenuWidgetClass);
-        if (Menu)
-        {
-            Menu->AddToViewport();
-            Menu->OnTapChanged.AddDynamic(this, &ATwinUiManager::SetCurrentTap);
-            Menu->UiManager = this;
+	if (MenuWidgetClass)
+	{
+		Menu = CreateWidget<UMenuWidget>(GetWorld(), MenuWidgetClass);
+		if (Menu)
+		{
+			Menu->AddToViewport();
+			Menu->OnTapChanged.AddDynamic(this, &ATwinUiManager::SetCurrentTap);
+			Menu->UiManager = this;
 
-            // Bind GolfGameButton click event
-            if (Menu->GolfGameButton)
-            {
-                Menu->GolfGameButton->OnClicked.AddDynamic(this, &ATwinUiManager::OnGolfGameButtonClicked);
-            }
-        }
-    }
+			// Bind GolfGameButton click event
+			if (Menu->GolfGameButton)
+			{
+				Menu->GolfGameButton->OnClicked.AddDynamic(this, &ATwinUiManager::OnGolfGameButtonClicked);
+			}
+		}
+	}
 
-    SetCurrentTap(CurrentTap);
+	SetCurrentTap(CurrentTap);
 }
 void ATwinUiManager::OnGolfGameButtonClicked()
 {
-    UGameplayStatics::OpenLevel(this, FName("GolfScene"));
+	UGameplayStatics::OpenLevel(this, FName("GolfGame"));
 }
