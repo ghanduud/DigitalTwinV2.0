@@ -221,7 +221,7 @@ void UFilterMenu::SoldCheckChanged(bool bIsChecked)
         }
     }
     else
-    {   
+    {
         // Restore blue highlight for all buildings of selected type (remove yellow highlight only)
         for (TActorIterator<ABulding> It(World); It; ++It)
         {
@@ -245,30 +245,21 @@ void UFilterMenu::HandleExclusiveCheck(UCheckBox* CheckedOne)
 
 void UFilterMenu::OnStandalonevillaButtonClicked()
 {
-    if (StandAloneVillaCheck)
-    {
-        HandleExclusiveCheck(StandAloneVillaCheck);
-        StandAloneVillaCheck->SetIsChecked(false); // Force state change
-        StandAloneVillaCheck->SetIsChecked(true);  // Always triggers OnCheckStateChanged
-    }
+    HandleExclusiveCheck(StandAloneVillaCheck);
+    StandAloneVillaCheck->SetIsChecked(true);
+    StandAloneVillaCheckChanged(true); // Directly call the filter logic
 }
 
 void UFilterMenu::OnOneStoryvillaButtonClicked()
 {
-    if (OneStoryVillaCheck)
-    {
-        HandleExclusiveCheck(OneStoryVillaCheck);
-        OneStoryVillaCheck->SetIsChecked(false);
-        OneStoryVillaCheck->SetIsChecked(true);
-    }
+    HandleExclusiveCheck(OneStoryVillaCheck);
+    OneStoryVillaCheck->SetIsChecked(true);
+    OneStoryVillaCheckChanged(true);
 }
 
 void UFilterMenu::OnPalaceButtonClicked()
 {
-    if (PalaceCheck)
-    {
-        HandleExclusiveCheck(PalaceCheck);
-        PalaceCheck->SetIsChecked(false);
-        PalaceCheck->SetIsChecked(true);
-    }
+    HandleExclusiveCheck(PalaceCheck);
+    PalaceCheck->SetIsChecked(true);
+    PalaceCheckChanged(true);
 }
