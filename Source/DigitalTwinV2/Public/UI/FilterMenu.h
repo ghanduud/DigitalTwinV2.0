@@ -34,29 +34,15 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UCheckBox* PalaceCheck;
 
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* AvailableStandAloneVillaCheck;
-
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* AvailableOneStoryVillaCheck;
-
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* AvailablePalaceCheck;
-
-	TArray<UCheckBox*> AvailabilityCheckBoxes;
-
 
 
 	UPROPERTY(meta = (BindWidget))
-	UCheckBox* SoldStandAloneVillaCheck;
+	UCheckBox* AvailableCheck;
 
 	UPROPERTY(meta = (BindWidget))
-	UCheckBox* SoldOneStoryVillaCheck;
+	UCheckBox* SoldCheck;
 
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* SoldPalaceCheck;
 
-	TArray<UCheckBox*> SoldCheckBoxes;
 
 	UPROPERTY(meta = (BindWidget))
 	class UButton* StandalonevillaButton;
@@ -81,23 +67,11 @@ public:
 	void PalaceCheckChanged(bool bIsChecked);
 
 	UFUNCTION()
-	void AvailableStandAloneVillaCheckChanged(bool bIsChecked);
+	void AvailableCheckChanged(bool bIsChecked);
 
 	UFUNCTION()
-	void AvailableOneStoryVillaCheckChanged(bool bIsChecked);
+	void SoldCheckChanged(bool bIsChecked);
 
-	UFUNCTION()
-	void AvailablePalaceCheckChanged(bool bIsChecked);
-
-
-	UFUNCTION()
-	void SoldStandAloneVillaCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void SoldOneStoryVillaCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void SoldPalaceCheckChanged(bool bIsChecked);
 
 	void HandleExclusiveCheck(UCheckBox* CheckedOne);
 

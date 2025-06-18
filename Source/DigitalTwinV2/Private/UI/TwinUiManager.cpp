@@ -8,6 +8,7 @@
 #include "UI/MenuWidget.h"
 #include "UI/FilterMenu.h"
 #include "UI/OverviewWidget.h"
+#include "UI/FilterAvailability.h"
 #include "Atmosphere/Atmosphere.h"
 #include "Kismet/GameplayStatics.h"
 #include "Buldings/Bulding.h"
