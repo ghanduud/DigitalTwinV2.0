@@ -45,16 +45,7 @@ public:
 
 	TArray<UCheckBox*> AvailabilityCheckBoxes;
 
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* DiscountStandAloneVillaCheck;
 
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* DiscountOneStoryVillaCheck;
-
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* DiscountPalaceCheck;
-
-	TArray<UCheckBox*> DiscountCheckBoxes;
 
 	UPROPERTY(meta = (BindWidget))
 	UCheckBox* SoldStandAloneVillaCheck;
@@ -66,6 +57,15 @@ public:
 	UCheckBox* SoldPalaceCheck;
 
 	TArray<UCheckBox*> SoldCheckBoxes;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* StandalonevillaButton;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* OneStoryvillaButton;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* PalaceButton;
 
 
 
@@ -89,14 +89,6 @@ public:
 	UFUNCTION()
 	void AvailablePalaceCheckChanged(bool bIsChecked);
 
-	UFUNCTION()
-	void DiscountStandAloneVillaCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void DiscountOneStoryVillaCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void DiscountPalaceCheckChanged(bool bIsChecked);
 
 	UFUNCTION()
 	void SoldStandAloneVillaCheckChanged(bool bIsChecked);
@@ -108,4 +100,11 @@ public:
 	void SoldPalaceCheckChanged(bool bIsChecked);
 
 	void HandleExclusiveCheck(UCheckBox* CheckedOne);
+
+	UFUNCTION()
+	void OnStandalonevillaButtonClicked();
+	UFUNCTION()
+	void OnOneStoryvillaButtonClicked();
+	UFUNCTION()
+	void OnPalaceButtonClicked();
 };
