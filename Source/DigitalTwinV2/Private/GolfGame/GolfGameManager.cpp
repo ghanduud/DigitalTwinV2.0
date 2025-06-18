@@ -8,6 +8,9 @@
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
 #include "Blueprint/UserWidget.h"
+#include "Camera/CameraActor.h"
+#include "EngineUtils.h"
+#include "Components/BoxComponent.h"
 
 AGolfGameManager* AGolfGameManager::Instance = nullptr;
 
@@ -24,6 +27,16 @@ AGolfGameManager::AGolfGameManager()
 void AGolfGameManager::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (!FollowCameraActor)
+	{
+		for (TActorIterator<ACameraActor> It(GetWorld()); It; ++It)
+		{
+			FollowCameraActor = *It;
+			break; // Use the first camera found
+		}
+	}
+
 	Instance = this;
 	InitializeHoles();
 	SpawnBallAtCurrentPosition();
@@ -35,6 +48,24 @@ void AGolfGameManager::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (!bIsWaitingForBallToStop || !SpawnedBall) return;
 
+	// Camera follow logic
+	if (FollowCameraActor && SpawnedBall)
+	{
+		// Get ball's location and forward vector
+		FVector BallLocation = SpawnedBall->GetActorLocation();
+		FRotator BallRotation = SpawnedBall->GetActorRotation();
+		FVector DesiredCameraLocation = BallLocation + CameraOffset;
+		FollowCameraActor->SetActorLocation(DesiredCameraLocation);
+	}
+	else
+	{
+		for (TActorIterator<ACameraActor> It(GetWorld()); It; ++It)
+		{
+			FollowCameraActor = *It;
+			break; // Use the first camera found
+		}
+	}
+
 	TimeSinceShot += DeltaTime;
 	if (TimeSinceShot < WaitBeforeCheckingStop) return;
 
@@ -43,6 +74,54 @@ void AGolfGameManager::Tick(float DeltaTime)
 	{
 		AfterShotSequence();
 	}
+
+	if (Holes.IsValidIndex(CurrentHoleIndex) && Holes[CurrentHoleIndex].HoleBounds)
+	{
+		AActor* BoundsActor = Holes[CurrentHoleIndex].HoleBounds;
+		UBoxComponent* Box = BoundsActor->FindComponentByClass<UBoxComponent>();
+		if (Box && SpawnedBall)
+		{
+			// Transform ball location to box local space
+			FVector LocalPos = Box->GetComponentTransform().InverseTransformPosition(SpawnedBall->GetActorLocation());
+			FVector Extent = Box->GetUnscaledBoxExtent();
+
+			// Check if inside box
+			bool bInside =
+				FMath::Abs(LocalPos.X) <= Extent.X &&
+				FMath::Abs(LocalPos.Y) <= Extent.Y &&
+				FMath::Abs(LocalPos.Z) <= Extent.Z;
+
+			if (!bInside)
+			{
+				HandleBallOutOfBounds();
+				return;
+			}
+		}
+	}
+
+
+	if (Holes.IsValidIndex(CurrentHoleIndex) && Holes[CurrentHoleIndex].HoleTarget)
+	{
+		AActor* TargetActor = Holes[CurrentHoleIndex].HoleTarget;
+		UBoxComponent* TargetBox = TargetActor->FindComponentByClass<UBoxComponent>();
+		if (TargetBox && SpawnedBall)
+		{
+			FVector LocalPos = TargetBox->GetComponentTransform().InverseTransformPosition(SpawnedBall->GetActorLocation());
+			FVector Extent = TargetBox->GetUnscaledBoxExtent();
+
+			bool bInside =
+				FMath::Abs(LocalPos.X) <= Extent.X &&
+				FMath::Abs(LocalPos.Y) <= Extent.Y &&
+				FMath::Abs(LocalPos.Z) <= Extent.Z;
+
+			if (bInside)
+			{
+				HandleHoleCompleted();
+				return;
+			}
+		}
+	}
+
 }
 
 void AGolfGameManager::InitializeHoles()
@@ -264,6 +343,12 @@ void AGolfGameManager::AfterShotSequence()
 {
 	if (!SpawnedBall) return;
 
+	// Increment score for the current hole
+	if (Holes.IsValidIndex(CurrentHoleIndex))
+	{
+		Holes[CurrentHoleIndex].Score += 1;
+	}
+
 	FVector FinalLocation = SpawnedBall->GetActorLocation();
 	FRotator FinalRotation = SpawnedBall->GetActorRotation();
 	SpawnedBall->Destroy();
@@ -328,3 +413,64 @@ FHoleData AGolfGameManager::GetCurrentHoleData() const
 void AGolfGameManager::SetShotTypeToLong() { CurrentShotType = EShotType::LongShot; }
 void AGolfGameManager::SetShotTypeToShort() { CurrentShotType = EShotType::ShortShot; }
 void AGolfGameManager::SetShotTypeToChip() { CurrentShotType = EShotType::ChipShot; }
+
+
+void AGolfGameManager::HandleBallOutOfBounds()
+{
+	// Increment score for the current hole
+	if (Holes.IsValidIndex(CurrentHoleIndex))
+	{
+		Holes[CurrentHoleIndex].Score += 1;
+	}
+
+	// Reset ball to start position
+	if (SpawnedBall)
+	{
+		SpawnedBall->Destroy();
+		SpawnedBall = nullptr;
+	}
+
+	// Respawn ball at start
+	SpawnBallAtCurrentPosition();
+
+	// Reset shot state
+	bIsAdjustingShot = false;
+	bHasAdjusted = false;
+	RotationAngle = 0.0f;
+	bIsWaitingForBallToStop = false;
+	TimeSinceShot = 0.0f;
+}
+
+
+void AGolfGameManager::HandleHoleCompleted()
+{
+	// Advance to next hole
+	CurrentHoleIndex++;
+
+	if (Holes.IsValidIndex(CurrentHoleIndex))
+	{
+		CurrentStartActor = Holes[CurrentHoleIndex].StartPoint;
+		CurrentTargetActor = Holes[CurrentHoleIndex].HoleTarget;
+		// Set bounds if you use them
+		// CurrentBoundsActor = Holes[CurrentHoleIndex].HoleBounds;
+
+		// Destroy current ball
+		if (SpawnedBall)
+		{
+			SpawnedBall->Destroy();
+			SpawnedBall = nullptr;
+		}
+
+		// Set shot type to Long Shot for new hole
+		CurrentShotType = EShotType::LongShot;
+
+		// Spawn ball at new start
+		SpawnBallAtCurrentPosition();
+	}
+	else
+	{
+		// No more holes: end game or show results
+		UE_LOG(LogTemp, Log, TEXT("All holes completed!"));
+		// Optionally trigger end game UI/logic here
+	}
+}

@@ -170,6 +170,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Trajectory")
 	AActor* FindTaggedActor(const TArray<AActor*>& Actors, const FName& Tag);
 
+	UFUNCTION(BlueprintCallable, Category = "Trajectory")
+	void HandleBallOutOfBounds();
+
+	UFUNCTION(BlueprintCallable, Category = "Trajectory")
+	void HandleHoleCompleted();
+
 
 	UPROPERTY()
 	UStaticMesh* LineMesh;
@@ -219,7 +225,7 @@ public:
 
 
 	bool bIsWaitingForBallToStop = false;
-	float StopVelocityThreshold = 10.0f;
+	float StopVelocityThreshold = 50.0f;
 
 	float TimeSinceShot = 0.0f;
 	float WaitBeforeCheckingStop = 0.5f; // Half a second
@@ -236,6 +242,15 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Shot")
 	float ChipShotPower = 600.0f;
+
+
+	// Reference to the camera actor that should follow the ball
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Camera")
+	AActor* FollowCameraActor = nullptr;
+
+	// Offset from the ball (relative to ball's forward vector)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Camera")
+	FVector CameraOffset = FVector(-400, 0, 200);
 
 };
 
