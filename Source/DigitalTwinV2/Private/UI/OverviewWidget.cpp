@@ -51,13 +51,19 @@ void UOverviewWidget::SetUnitImageFromPath(const FString& AssetPath)
 
 void UOverviewWidget::SetBuilding(ABulding* NewBuilding)
 {
-    if (!NewBuilding)
+    // Hide the widget if not a valid building type
+    if (!NewBuilding ||
+        (NewBuilding->BuildingType != EBuildingType::OneStoryVilla &&
+         NewBuilding->BuildingType != EBuildingType::Palace &&
+         NewBuilding->BuildingType != EBuildingType::StandAloneVilla))
     {
+        SetVisibility(ESlateVisibility::Collapsed);
         SetUnitImageFromPath(DefaultImagePath);
         return;
     }
 
-     // Update image
+    SetVisibility(ESlateVisibility::Visible);
+    // Update image
     SetUnitImageFromPath(NewBuilding->ImagePath.IsEmpty() ? DefaultImagePath : NewBuilding->ImagePath);
 
     // Update display name

@@ -34,38 +34,24 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UCheckBox* PalaceCheck;
 
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* AvailableStandAloneVillaCheck;
+
 
 	UPROPERTY(meta = (BindWidget))
-	UCheckBox* AvailableOneStoryVillaCheck;
+	UCheckBox* AvailableCheck;
 
 	UPROPERTY(meta = (BindWidget))
-	UCheckBox* AvailablePalaceCheck;
+	UCheckBox* SoldCheck;
 
-	TArray<UCheckBox*> AvailabilityCheckBoxes;
 
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* DiscountStandAloneVillaCheck;
 
 	UPROPERTY(meta = (BindWidget))
-	UCheckBox* DiscountOneStoryVillaCheck;
+	class UButton* StandalonevillaButton;
 
 	UPROPERTY(meta = (BindWidget))
-	UCheckBox* DiscountPalaceCheck;
-
-	TArray<UCheckBox*> DiscountCheckBoxes;
+	class UButton* OneStoryvillaButton;
 
 	UPROPERTY(meta = (BindWidget))
-	UCheckBox* SoldStandAloneVillaCheck;
-
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* SoldOneStoryVillaCheck;
-
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* SoldPalaceCheck;
-
-	TArray<UCheckBox*> SoldCheckBoxes;
+	class UButton* PalaceButton;
 
 
 
@@ -81,31 +67,18 @@ public:
 	void PalaceCheckChanged(bool bIsChecked);
 
 	UFUNCTION()
-	void AvailableStandAloneVillaCheckChanged(bool bIsChecked);
+	void AvailableCheckChanged(bool bIsChecked);
 
 	UFUNCTION()
-	void AvailableOneStoryVillaCheckChanged(bool bIsChecked);
+	void SoldCheckChanged(bool bIsChecked);
 
-	UFUNCTION()
-	void AvailablePalaceCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void DiscountStandAloneVillaCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void DiscountOneStoryVillaCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void DiscountPalaceCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void SoldStandAloneVillaCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void SoldOneStoryVillaCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void SoldPalaceCheckChanged(bool bIsChecked);
 
 	void HandleExclusiveCheck(UCheckBox* CheckedOne);
+
+	UFUNCTION()
+	void OnStandalonevillaButtonClicked();
+	UFUNCTION()
+	void OnOneStoryvillaButtonClicked();
+	UFUNCTION()
+	void OnPalaceButtonClicked();
 };

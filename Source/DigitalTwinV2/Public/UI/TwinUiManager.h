@@ -93,6 +93,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Menu")
 	void UpdateUIVisibility();
 
+	//avilibility ui
+
+	UPROPERTY()
+	UW_FilterAvailability* WFilterAvailability;
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UW_FilterAvailability> FilterAvailabilityClass;
+
 
 	/** Currently selected building */
 	UPROPERTY(BlueprintReadOnly, Category = "Building", meta = (AllowPrivateAccess = "true"))
