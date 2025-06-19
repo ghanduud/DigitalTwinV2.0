@@ -6,8 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "GolfGameManager.generated.h"
 
-
-
 UENUM(BlueprintType)
 enum class EShotType : uint8
 {
@@ -244,6 +242,13 @@ public:
 	UPROPERTY()
 	TArray<AActor*> AllTargets;
 
+	// Reference to the MetaHuman Blueprint in the level
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	ACharacter* ThirdCharacter;
+
+	// Handles the AnimNotify from the montage to spawn the ball
+	UFUNCTION()
+	void HandleAnimNotify_SpawnBall(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload);
 };
 
 

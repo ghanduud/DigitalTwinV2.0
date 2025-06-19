@@ -10,6 +10,9 @@
 #include "Camera/CameraActor.h"
 #include "EngineUtils.h"
 #include "Components/BoxComponent.h"
+#include "GameFramework/Character.h"
+#include "Animation/AnimInstance.h"
+#include "Components/SkeletalMeshComponent.h"
 
 AGolfGameManager* AGolfGameManager::Instance = nullptr;
 
@@ -27,6 +30,16 @@ void AGolfGameManager::BeginPlay()
 {
 	Super::BeginPlay();
 	Instance = this;
+
+	// Bind AnimNotify
+	if (ThirdCharacter && ThirdCharacter->GetMesh())
+	{
+		UAnimInstance* AnimInstance = ThirdCharacter->GetMesh()->GetAnimInstance();
+		if (AnimInstance)
+		{
+			AnimInstance->OnPlayMontageNotifyBegin.AddDynamic(this, &AGolfGameManager::HandleAnimNotify_SpawnBall);
+		}
+	}
 
 	TArray<AActor*> FoundStarts;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), StartActorClass, FoundStarts);
@@ -46,11 +59,28 @@ void AGolfGameManager::BeginPlay()
 
 	SpawnBallAtCurrentPosition();
 	StartGameSequence();
+
+	if (!FollowCameraActor)
+	{
+		FollowCameraActor = GetWorld()->SpawnActor<AActor>(AActor::StaticClass());
+		if (FollowCameraActor)
+		{
+			FollowCameraActor->SetActorLocation(FVector::ZeroVector);
+		}
+	}
 }
 
 void AGolfGameManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (FollowCameraActor && SpawnedBall)
+	{
+		FVector BallLocation = SpawnedBall->GetActorLocation();
+		FVector CameraLocation = BallLocation + CameraOffset;
+		FollowCameraActor->SetActorLocation(CameraLocation);
+	}
+
 	if (!bIsWaitingForBallToStop || !SpawnedBall) return;
 
 	TimeSinceShot += DeltaTime;
@@ -104,6 +134,11 @@ void AGolfGameManager::BeginAdjustShot()
 	AccumulatedInput = FVector2D::ZeroVector;
 	OriginalStartRotation = CurrentStartActor->GetActorRotation();
 	RotationAngle = 0.0f;
+
+	if (ThirdCharacter)
+	{
+		ThirdCharacter->CallFunctionByNameWithArguments(TEXT("PlayMontageToHold"), *GLog, nullptr, true);
+	}
 }
 
 void AGolfGameManager::AdjustShot(const FVector2D& Delta)
@@ -167,6 +202,18 @@ void AGolfGameManager::Shoot()
 		if (UPrimitiveComponent* BallRoot = Cast<UPrimitiveComponent>(SpawnedBall->GetRootComponent()))
 		{
 			BallRoot->SetPhysicsLinearVelocity(LaunchVelocity, false);
+		}
+	}
+
+	if (ThirdCharacter)
+	{
+		if (CurrentShotType == EShotType::ChipShot)
+		{
+			ThirdCharacter->CallFunctionByNameWithArguments(TEXT("ChipShot"), *GLog, nullptr, true);
+		}
+		else
+		{
+			ThirdCharacter->CallFunctionByNameWithArguments(TEXT("ResumeMontage"), *GLog, nullptr, true);
 		}
 	}
 
@@ -240,51 +287,75 @@ void AGolfGameManager::UpdateTrajectorySpline(const TArray<FVector>& Points)
 
 void AGolfGameManager::AfterShotSequence()
 {
-	if (!SpawnedBall) return;
+    if (!SpawnedBall || !ThirdCharacter) return;
 
-	FVector FinalLocation = SpawnedBall->GetActorLocation();
-	FRotator FinalRotation = SpawnedBall->GetActorRotation();
-	SpawnedBall->Destroy();
-	SpawnedBall = nullptr;
+    FVector FinalLocation = SpawnedBall->GetActorLocation();
+    FRotator FinalRotation = SpawnedBall->GetActorRotation();
+    SpawnedBall->Destroy();
+    SpawnedBall = nullptr;
 
-	if (CurrentStartActor)
-	{
-		CurrentStartActor->SetActorLocation(FinalLocation);
-		CurrentStartActor->SetActorRotation(FinalRotation);
-	}
+    if (CurrentStartActor)
+    {
+        CurrentStartActor->SetActorLocation(FinalLocation);
+        CurrentStartActor->SetActorRotation(FinalRotation);
+    }
 
-	SpawnBallAtCurrentPosition();
-	bIsWaitingForBallToStop = false; // ✅ Reset here
+    // Always move BP_Third to 60 units behind the ball, matching the ball's ground height
+    FVector BallForward = CurrentStartActor->GetActorForwardVector();
+    FVector BehindBallLocation = FinalLocation - BallForward * 60.0f;
+    BehindBallLocation.Z = FinalLocation.Z; // Match ball's Z (height)
+    ThirdCharacter->SetActorLocation(BehindBallLocation);
+
+    SpawnBallAtCurrentPosition();
+    bIsWaitingForBallToStop = false; // ✅ Reset here
 }
 
 
 void AGolfGameManager::SpawnBallAtCurrentPosition()
 {
-	if (!BallActorClass || !CurrentStartActor) return;
-	if (SpawnedBall) SpawnedBall->Destroy();
+    if (!BallActorClass || !CurrentStartActor) return;
+    if (SpawnedBall) SpawnedBall->Destroy();
 
-	FRotator NewRotation = FRotator::ZeroRotator;
-	if (AllTargets.Num() > 0)
-	{
-		FVector ToTarget = (AllTargets[0]->GetActorLocation() - CurrentStartActor->GetActorLocation()).GetSafeNormal();
-		NewRotation = ToTarget.Rotation();
-		CurrentStartActor->SetActorRotation(NewRotation);
-	}
+    FRotator NewRotation = FRotator::ZeroRotator;
+    if (AllTargets.Num() > 0)
+    {
+        FVector ToTarget = (AllTargets[0]->GetActorLocation() - CurrentStartActor->GetActorLocation()).GetSafeNormal();
+        NewRotation = ToTarget.Rotation();
+        CurrentStartActor->SetActorRotation(NewRotation);
+    }
 
-	FActorSpawnParameters SpawnParams;
-	SpawnedBall = GetWorld()->SpawnActor<AActor>(BallActorClass, CurrentStartActor->GetActorLocation(), NewRotation, SpawnParams);
+    FActorSpawnParameters SpawnParams;
+    SpawnedBall = GetWorld()->SpawnActor<AActor>(BallActorClass, CurrentStartActor->GetActorLocation(), NewRotation, SpawnParams);
 
-	if (SpawnedBall)
-	{
-		USplineComponent* BallSpline = NewObject<USplineComponent>(SpawnedBall, TEXT("TrajectorySpline"));
-		if (BallSpline)
-		{
-			BallSpline->RegisterComponent();
-			BallSpline->AttachToComponent(SpawnedBall->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
-			BallSpline->SetMobility(EComponentMobility::Movable);
-			TrajectorySpline = BallSpline;
-		}
-	}
+    if (SpawnedBall && ThirdCharacter)
+    {
+        // Prevent collision between BP_Third and the spawned ball
+        TArray<UPrimitiveComponent*> BallComponents;
+        SpawnedBall->GetComponents<UPrimitiveComponent>(BallComponents);
+        for (UPrimitiveComponent* BallComp : BallComponents)
+        {
+            BallComp->IgnoreActorWhenMoving(ThirdCharacter, true);
+        }
+
+        TArray<UPrimitiveComponent*> ThirdComponents;
+        ThirdCharacter->GetComponents<UPrimitiveComponent>(ThirdComponents);
+        for (UPrimitiveComponent* ThirdComp : ThirdComponents)
+        {
+            ThirdComp->IgnoreActorWhenMoving(SpawnedBall, true);
+        }
+    }
+
+    if (SpawnedBall)
+    {
+        USplineComponent* BallSpline = NewObject<USplineComponent>(SpawnedBall, TEXT("TrajectorySpline"));
+        if (BallSpline)
+        {
+            BallSpline->RegisterComponent();
+            BallSpline->AttachToComponent(SpawnedBall->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+            BallSpline->SetMobility(EComponentMobility::Movable);
+            TrajectorySpline = BallSpline;
+        }
+    }
 }
 
 void AGolfGameManager::StartGameSequence()
@@ -320,3 +391,13 @@ void AGolfGameManager::EndGame()
 
 void AGolfGameManager::SetShotTypeToLong() { CurrentShotType = EShotType::LongShot; }
 void AGolfGameManager::SetShotTypeToChip() { CurrentShotType = EShotType::ChipShot; }
+
+void AGolfGameManager::HandleAnimNotify_SpawnBall(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
+{
+    this->SpawnBallAtCurrentPosition();
+    FVector LaunchVelocity = this->ComputeLaunchVelocity();
+    if (this->SpawnedBall)
+    {
+        this->SpawnedBall->GetRootComponent()->ComponentVelocity = LaunchVelocity;
+    }
+}
