@@ -65,11 +65,6 @@ void ABirdEye::BeginPlay()
 	// Set default camera arm length and enable input by default
 	SetCameraArmLength(40000.f);
 	SetInputEnabled(false);;
-
-	FVector2D Temp1, Temp2;
-
-	PlayerController->GetInputTouchState(ETouchIndex::Touch1, Temp1.X, Temp1.Y, bTouch1Down);
-	PlayerController->GetInputTouchState(ETouchIndex::Touch2, Temp2.X, Temp2.Y, bTouch2Down);
 }
 
 void ABirdEye::Tick(float DeltaTime)
@@ -89,35 +84,40 @@ void ABirdEye::Tick(float DeltaTime)
 
 	HandleSmoothZoom(DeltaTime);
 
-	if (bTouch1Down && bTouch2Down)
+	// ✅ Use local temp vars so you don’t overwrite bTouch1Down/bTouch2Down mid-frame
+	bool bCurrentTouch1Down = false;
+	bool bCurrentTouch2Down = false;
+	FVector2D CurrentTouch1 = FVector2D::ZeroVector;
+	FVector2D CurrentTouch2 = FVector2D::ZeroVector;
+
+	PlayerController->GetInputTouchState(ETouchIndex::Touch1, CurrentTouch1.X, CurrentTouch1.Y, bCurrentTouch1Down);
+	PlayerController->GetInputTouchState(ETouchIndex::Touch2, CurrentTouch2.X, CurrentTouch2.Y, bCurrentTouch2Down);
+
+	if (bCurrentTouch1Down && bCurrentTouch2Down)
 	{
-		FVector2D CurrentTouch1, CurrentTouch2;
+		float CurrentDistance = FVector2D::Distance(CurrentTouch1, CurrentTouch2);
 
-		// Get the current positions
-		PlayerController->GetInputTouchState(ETouchIndex::Touch1, CurrentTouch1.X, CurrentTouch1.Y, bTouch1Down);
-		PlayerController->GetInputTouchState(ETouchIndex::Touch2, CurrentTouch2.X, CurrentTouch2.Y, bTouch2Down);
-
-		if (bTouch1Down && bTouch2Down)
+		if (!FMath::IsNearlyZero(PreviousTouchDistance))
 		{
-			float CurrentDistance = FVector2D::Distance(CurrentTouch1, CurrentTouch2);
+			float Delta = CurrentDistance - PreviousTouchDistance;
 
-			if (!FMath::IsNearlyZero(PreviousTouchDistance))
-			{
-				float Delta = CurrentDistance - PreviousTouchDistance;
+			// 🔧 You can tweak this multiplier as needed
+			float ZoomDelta = Delta * 0.1f;
 
-				// Scale the zoom sensitivity
-				float ZoomDelta = Delta * 0.1f;
-				ApplyZoom(ZoomDelta);
-			}
-
-			PreviousTouchDistance = CurrentDistance;
+			ApplyZoom(ZoomDelta);
 		}
-	}
 
-	if (!bTouch1Down || !bTouch2Down)
+		PreviousTouchDistance = CurrentDistance;
+	}
+	else
 	{
+		// If one or both touches are released, reset the previous distance
 		PreviousTouchDistance = 0.0f;
 	}
+
+	// ✅ Finally, update the touch state flags at the end of Tick
+	bTouch1Down = bCurrentTouch1Down;
+	bTouch2Down = bCurrentTouch2Down;
 }
 
 
@@ -131,6 +131,11 @@ void ABirdEye::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		Input->BindAction(Input_ScreenPress, ETriggerEvent::Completed, this, &ABirdEye::OnDragEnd);
 		Input->BindAction(Input_ScreenMove, ETriggerEvent::Triggered, this, &ABirdEye::OnDragUpdate);
 		Input->BindAction(Input_Zoom, ETriggerEvent::Triggered, this, &ABirdEye::HandleZoomInput);
+
+
+		Input->BindAction(Input_ScreenPress, ETriggerEvent::Started, this, &ABirdEye::OnTouchPressed);
+		Input->BindAction(Input_ScreenPress, ETriggerEvent::Completed, this, &ABirdEye::OnTouchReleased);
+
 	}
 }
 
@@ -145,19 +150,87 @@ void ABirdEye::OnDragStart()
 	bIsDragging = true;
 	TotalDragDelta = FVector2D::ZeroVector;
 	DragStartTime = GetWorld()->GetTimeSeconds();
+
+	// Store the initial touch/mouse position
+	LastTouchPosition = FVector2D::ZeroVector;
+	SmoothedInputDelta = FVector2D::ZeroVector;
+
+	// Read screen position on drag start
+	FVector2D ScreenPos;
+	bool bTouchDown = false;
+	PlayerController->GetInputTouchState(ETouchIndex::Touch1, ScreenPos.X, ScreenPos.Y, bTouchDown);
+
+	if (bTouchDown)
+	{
+		LastTouchPosition = ScreenPos;
+	}
+	else
+	{
+		PlayerController->GetMousePosition(LastTouchPosition.X, LastTouchPosition.Y);
+	}
 }
+
+
+// void ABirdEye::OnDragUpdate(const FInputActionInstance& Instance)
+// {
+// 	if (!bIsDragging) return;
+
+// 	FVector2D InputPosition = Instance.GetValue().Get<FVector2D>();
+// 	FVector2D Delta;
+
+// 	// #if PLATFORM_IOS || PLATFORM_ANDROID
+// 		// Calculate raw delta
+// 	Delta = InputPosition - LastTouchPosition;
+// 	LastTouchPosition = InputPosition;
+
+// 	// 🔽 Scale down touch delta (you can tweak this factor)
+// 	Delta *= TouchDragSensitivity;
+// 	// #else
+// 	// 	// Assume InputPosition is already a delta (mouse)
+// 	// 	Delta = InputPosition;
+// 	// #endif
+
+// 	RotateCamera(Delta);
+
+// 	float DeltaTime = GetWorld()->GetDeltaSeconds();
+// 	CurrentDragVelocity = FMath::Vector2DInterpTo(CurrentDragVelocity, Delta / DeltaTime, DeltaTime, VelocitySmoothing);
+// 	TotalDragDelta += Delta;
+// }
+
 
 void ABirdEye::OnDragUpdate(const FInputActionInstance& Instance)
 {
 	if (!bIsDragging) return;
 
-	FVector2D Delta = Instance.GetValue().Get<FVector2D>();
-	RotateCamera(Delta);
+	FVector2D InputPosition = Instance.GetValue().Get<FVector2D>();
 
+	if (LastTouchPosition.IsNearlyZero())
+	{
+		LastTouchPosition = InputPosition;
+		return;
+	}
+
+	FVector2D RawDelta = InputPosition - LastTouchPosition;
+	LastTouchPosition = InputPosition;
+
+	// Clamp absurdly large deltas (caused by input skips)
+	if (RawDelta.SizeSquared() > 50000.0f) return;
+
+	FVector2D TargetDelta = RawDelta * TouchDragSensitivity;
+
+	// Apply the smoothed delta
 	float DeltaTime = GetWorld()->GetDeltaSeconds();
-	CurrentDragVelocity = FMath::Vector2DInterpTo(CurrentDragVelocity, Delta / DeltaTime, DeltaTime, VelocitySmoothing);
-	TotalDragDelta += Delta;
+	SmoothedInputDelta = FMath::Vector2DInterpTo(SmoothedInputDelta, TargetDelta, DeltaTime, 20.0f);
+	RotateCamera(SmoothedInputDelta);
+
+	// 🚨 Save raw (not smoothed) velocity for momentum
+	CurrentDragVelocity = TargetDelta / DeltaTime;
+
+	TotalDragDelta += TargetDelta;
 }
+
+
+
 
 void ABirdEye::OnDragEnd()
 {
@@ -190,7 +263,7 @@ void ABirdEye::RotateCamera(const FVector2D& DragDelta)
 
 	float DeltaTime = GetWorld()->GetDeltaSeconds();
 	float YawInput = DragDelta.X * RotationSpeed * DeltaTime;
-	float PitchInput = DragDelta.Y * RotationSpeed * DeltaTime;
+	float PitchInput = -DragDelta.Y * RotationSpeed * DeltaTime;
 
 	FRotator CurrentRotation = SpringArm->GetRelativeRotation();
 
@@ -276,12 +349,13 @@ void ABirdEye::HandleSmoothZoom(float DeltaTime)
 
 FVector2D ABirdEye::CalculateMomentumVelocity(float DragDuration, const FVector2D& DragDelta) const
 {
-	float SafeDragDuration = (DragDuration < KINDA_SMALL_NUMBER) ? KINDA_SMALL_NUMBER : DragDuration;
-	float InstantVelocity = DragDelta.Size() / SafeDragDuration;
+	float SafeDuration = FMath::Max(DragDuration, KINDA_SMALL_NUMBER);
+	FVector2D DragDirection = DragDelta.GetSafeNormal();
+	float Speed = DragDelta.Size() / SafeDuration;
 
-	if (InstantVelocity > MomentumMinimumSpeed)
+	if (Speed > MomentumMinimumSpeed)
 	{
-		return CurrentDragVelocity.GetSafeNormal() * FMath::Min(InstantVelocity, MaxMomentumSpeed);
+		return DragDirection * FMath::Clamp(Speed, 0.f, MaxMomentumSpeed);
 	}
 
 	return FVector2D::ZeroVector;
@@ -397,4 +471,25 @@ void ABirdEye::SetInputEnabled(bool bEnabled)
 	{
 		PlayerController->bShowMouseCursor = bEnabled;
 	}
+}
+
+
+
+void ABirdEye::OnTouchPressed()
+{
+	bool bDown1 = false, bDown2 = false;
+	FVector2D P1, P2;
+
+	PlayerController->GetInputTouchState(ETouchIndex::Touch1, P1.X, P1.Y, bDown1);
+	PlayerController->GetInputTouchState(ETouchIndex::Touch2, P2.X, P2.Y, bDown2);
+
+	bTouch1Down = bDown1;
+	bTouch2Down = bDown2;
+}
+
+void ABirdEye::OnTouchReleased()
+{
+	bTouch1Down = false;
+	bTouch2Down = false;
+	PreviousTouchDistance = 0.0f;
 }

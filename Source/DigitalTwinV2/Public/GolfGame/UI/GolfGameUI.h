@@ -25,9 +25,6 @@ protected:
 
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* ShortShotBtn;
-
-	UPROPERTY(meta = (BindWidget))
 	class UButton* ChipShotBtn;
 
 
@@ -35,8 +32,6 @@ protected:
 	UFUNCTION()
 	void HandleLongShotClicked();
 
-	UFUNCTION()
-	void HandleShortShotClicked();
 
 	UFUNCTION()
 	void HandleChipShotClicked();
