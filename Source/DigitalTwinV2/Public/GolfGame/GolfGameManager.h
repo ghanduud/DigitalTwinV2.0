@@ -44,9 +44,6 @@ public:
 
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf")
-	TArray<struct FHoleData> Holes;
-
 	// For tracking current hole
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Golf")
 	int32 CurrentHoleIndex = 0;
@@ -64,8 +61,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Golf")
 	TSubclassOf<AActor> BoundsActorClass;
 
-	UFUNCTION(BlueprintCallable, Category = "Golf|Setup")
-	void InitializeHoles();
 
 	UFUNCTION(BlueprintCallable, Category = "Golf|Shot")
 	void BeginAdjustShot();
@@ -91,7 +86,8 @@ public:
 	AActor* CurrentStartActor = nullptr;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Golf")
-	AActor* CurrentTargetActor = nullptr;
+	AActor* BoundsActor = nullptr;
+
 
 
 	// Current type of shot being used
@@ -106,8 +102,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Golf|Shot")
 	void SetShotTypeToLong();
 
-	UFUNCTION(BlueprintCallable, Category = "Golf|Shot")
-	void SetShotTypeToShort();
 
 	UFUNCTION(BlueprintCallable, Category = "Golf|Shot")
 	void SetShotTypeToChip();
@@ -119,10 +113,6 @@ public:
 
 
 
-
-	// Accessor for current hole data
-	UFUNCTION(BlueprintCallable, Category = "Golf")
-	FHoleData GetCurrentHoleData() const;
 
 
 
@@ -167,14 +157,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Trajectory")
 	FVector ComputeLaunchVelocity() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Trajectory")
-	AActor* FindTaggedActor(const TArray<AActor*>& Actors, const FName& Tag);
 
 	UFUNCTION(BlueprintCallable, Category = "Trajectory")
 	void HandleBallOutOfBounds();
 
 	UFUNCTION(BlueprintCallable, Category = "Trajectory")
-	void HandleHoleCompleted();
+	void EndGame();
 
 
 	UPROPERTY()
@@ -251,6 +239,10 @@ public:
 	// Offset from the ball (relative to ball's forward vector)
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Camera")
 	FVector CameraOffset = FVector(-400, 0, 200);
+
+
+	UPROPERTY()
+	TArray<AActor*> AllTargets;
 
 };
 

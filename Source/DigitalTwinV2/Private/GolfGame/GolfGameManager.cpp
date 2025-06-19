@@ -1,10 +1,9 @@
-// Refactored GolfGameManager.cpp
-// Cleaned up duplicate logic, improved organization, grouped by feature
+// Cleaned and streamlined GolfGameManager.cpp
+// Removed unused features (short shot, multiple holes, scoring)
 
 #include "GolfGame/GolfGameManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Actor.h"
-#include "GolfGame/HoleData.h"
 #include "Components/SplineComponent.h"
 #include "Components/SplineMeshComponent.h"
 #include "Blueprint/UserWidget.h"
@@ -27,18 +26,24 @@ AGolfGameManager::AGolfGameManager()
 void AGolfGameManager::BeginPlay()
 {
 	Super::BeginPlay();
+	Instance = this;
 
-	if (!FollowCameraActor)
+	TArray<AActor*> FoundStarts;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), StartActorClass, FoundStarts);
+	if (FoundStarts.Num() > 0)
 	{
-		for (TActorIterator<ACameraActor> It(GetWorld()); It; ++It)
-		{
-			FollowCameraActor = *It;
-			break; // Use the first camera found
-		}
+		CurrentStartActor = FoundStarts[0];
 	}
 
-	Instance = this;
-	InitializeHoles();
+	TArray<AActor*> FoundBounds;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), BoundsActorClass, FoundBounds);
+	if (FoundBounds.Num() > 0)
+	{
+		BoundsActor = FoundBounds[0];
+	}
+
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), TargetActorClass, AllTargets);
+
 	SpawnBallAtCurrentPosition();
 	StartGameSequence();
 }
@@ -47,24 +52,6 @@ void AGolfGameManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	if (!bIsWaitingForBallToStop || !SpawnedBall) return;
-
-	// Camera follow logic
-	if (FollowCameraActor && SpawnedBall)
-	{
-		// Get ball's location and forward vector
-		FVector BallLocation = SpawnedBall->GetActorLocation();
-		FRotator BallRotation = SpawnedBall->GetActorRotation();
-		FVector DesiredCameraLocation = BallLocation + CameraOffset;
-		FollowCameraActor->SetActorLocation(DesiredCameraLocation);
-	}
-	else
-	{
-		for (TActorIterator<ACameraActor> It(GetWorld()); It; ++It)
-		{
-			FollowCameraActor = *It;
-			break; // Use the first camera found
-		}
-	}
 
 	TimeSinceShot += DeltaTime;
 	if (TimeSinceShot < WaitBeforeCheckingStop) return;
@@ -75,23 +62,15 @@ void AGolfGameManager::Tick(float DeltaTime)
 		AfterShotSequence();
 	}
 
-	if (Holes.IsValidIndex(CurrentHoleIndex) && Holes[CurrentHoleIndex].HoleBounds)
+	// Out of bounds
+	if (BoundsActor)
 	{
-		AActor* BoundsActor = Holes[CurrentHoleIndex].HoleBounds;
 		UBoxComponent* Box = BoundsActor->FindComponentByClass<UBoxComponent>();
-		if (Box && SpawnedBall)
+		if (Box)
 		{
-			// Transform ball location to box local space
 			FVector LocalPos = Box->GetComponentTransform().InverseTransformPosition(SpawnedBall->GetActorLocation());
 			FVector Extent = Box->GetUnscaledBoxExtent();
-
-			// Check if inside box
-			bool bInside =
-				FMath::Abs(LocalPos.X) <= Extent.X &&
-				FMath::Abs(LocalPos.Y) <= Extent.Y &&
-				FMath::Abs(LocalPos.Z) <= Extent.Z;
-
-			if (!bInside)
+			if (FMath::Abs(LocalPos.X) > Extent.X || FMath::Abs(LocalPos.Y) > Extent.Y || FMath::Abs(LocalPos.Z) > Extent.Z)
 			{
 				HandleBallOutOfBounds();
 				return;
@@ -99,77 +78,22 @@ void AGolfGameManager::Tick(float DeltaTime)
 		}
 	}
 
-
-	if (Holes.IsValidIndex(CurrentHoleIndex) && Holes[CurrentHoleIndex].HoleTarget)
+	// Entered hole
+	for (AActor* TargetActor : AllTargets)
 	{
-		AActor* TargetActor = Holes[CurrentHoleIndex].HoleTarget;
+		if (!TargetActor) continue;
 		UBoxComponent* TargetBox = TargetActor->FindComponentByClass<UBoxComponent>();
-		if (TargetBox && SpawnedBall)
+		if (!TargetBox) continue;
+
+		FVector LocalPos = TargetBox->GetComponentTransform().InverseTransformPosition(SpawnedBall->GetActorLocation());
+		FVector Extent = TargetBox->GetUnscaledBoxExtent();
+
+		if (FMath::Abs(LocalPos.X) <= Extent.X && FMath::Abs(LocalPos.Y) <= Extent.Y && FMath::Abs(LocalPos.Z) <= Extent.Z)
 		{
-			FVector LocalPos = TargetBox->GetComponentTransform().InverseTransformPosition(SpawnedBall->GetActorLocation());
-			FVector Extent = TargetBox->GetUnscaledBoxExtent();
-
-			bool bInside =
-				FMath::Abs(LocalPos.X) <= Extent.X &&
-				FMath::Abs(LocalPos.Y) <= Extent.Y &&
-				FMath::Abs(LocalPos.Z) <= Extent.Z;
-
-			if (bInside)
-			{
-				HandleHoleCompleted();
-				return;
-			}
+			EndGame();
+			return;
 		}
 	}
-
-}
-
-void AGolfGameManager::InitializeHoles()
-{
-	Holes.Empty();
-	UWorld* World = GetWorld();
-	if (!World) return;
-
-	TArray<AActor*> StartActors, TargetActors, BoundsActors;
-	UGameplayStatics::GetAllActorsOfClass(World, StartActorClass, StartActors);
-	UGameplayStatics::GetAllActorsOfClass(World, TargetActorClass, TargetActors);
-	UGameplayStatics::GetAllActorsOfClass(World, BoundsActorClass, BoundsActors);
-
-	for (int32 i = 1; i <= TotalHoles; ++i)
-	{
-		FName StartTag = FName(*FString::Printf(TEXT("Hole%d_Start"), i));
-		FName TargetTag = FName(*FString::Printf(TEXT("Hole%d_Target"), i));
-		FName BoundsTag = FName(*FString::Printf(TEXT("Hole%d_Bounds"), i));
-
-		AActor* Start = FindTaggedActor(StartActors, StartTag);
-		AActor* Target = FindTaggedActor(TargetActors, TargetTag);
-		AActor* Bounds = FindTaggedActor(BoundsActors, BoundsTag);
-
-		if (Start && Target && Bounds)
-		{
-			Holes.Add(FHoleData(i, Start, Target, Bounds));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Missing actors for Hole %d"), i);
-		}
-	}
-
-	if (Holes.Num() > 0)
-	{
-		CurrentHoleIndex = 0;
-		CurrentStartActor = Holes[0].StartPoint;
-		CurrentTargetActor = Holes[0].HoleTarget;
-	}
-}
-
-AActor* AGolfGameManager::FindTaggedActor(const TArray<AActor*>& Actors, const FName& Tag)
-{
-	for (AActor* Actor : Actors)
-	{
-		if (Actor && Actor->Tags.Contains(Tag)) return Actor;
-	}
-	return nullptr;
 }
 
 void AGolfGameManager::BeginAdjustShot()
@@ -178,40 +102,28 @@ void AGolfGameManager::BeginAdjustShot()
 	bIsAdjustingShot = true;
 	bHasAdjusted = false;
 	AccumulatedInput = FVector2D::ZeroVector;
-	CurrentInputDirection = FVector2D::ZeroVector;
 	OriginalStartRotation = CurrentStartActor->GetActorRotation();
 	RotationAngle = 0.0f;
 }
 
 void AGolfGameManager::AdjustShot(const FVector2D& Delta)
 {
-	if (!bHasStarted || bIsWaitingForBallToStop)
-		return;
+	if (!bHasStarted || bIsWaitingForBallToStop) return;
 
-	// 🔁 Restart shot if swiping down again after canceling
 	if (!bIsAdjustingShot)
 	{
-		// ⛔ Ignore upward movement — only accumulate downward input
-		if (Delta.Y < 0)
-			AccumulatedInput.Y += Delta.Y;
-
+		if (Delta.Y < 0) AccumulatedInput.Y += Delta.Y;
 		if (AccumulatedInput.Y < -MinInputDistance)
 		{
-			AccumulatedInput = FVector2D::ZeroVector; // Reset cleanly
+			AccumulatedInput = FVector2D::ZeroVector;
 			BeginAdjustShot();
 		}
 		return;
 	}
 
-	// Normal shot logic
 	AccumulatedInput += Delta;
-
-	if (!bHasAdjusted && FMath::Abs(AccumulatedInput.Y) >= MinInputDistance)
-		bHasAdjusted = true;
-	if (!bHasAdjusted)
-		return;
-
-	// Cancel shot if pulled back up
+	if (!bHasAdjusted && FMath::Abs(AccumulatedInput.Y) >= MinInputDistance) bHasAdjusted = true;
+	if (!bHasAdjusted) return;
 	if (AccumulatedInput.Y > -MinInputDistance * 0.1f)
 	{
 		CancelShotAdjust();
@@ -228,17 +140,11 @@ void AGolfGameManager::AdjustShot(const FVector2D& Delta)
 		CurrentStartActor->SetActorRotation(NewRot);
 	}
 
-	const FVector StartLocation = SpawnedBall ? SpawnedBall->GetActorLocation() : CurrentStartActor->GetActorLocation();
-	const FVector LaunchVelocity = ComputeLaunchVelocity();
-	const TArray<FVector> Arc = (CurrentShotType == EShotType::ChipShot)
-		? TArray<FVector>{ StartLocation, StartLocation + LaunchVelocity }
-	: CalculateArcPoints(StartLocation, LaunchVelocity, 30, 0.1f);
-
+	FVector StartLocation = SpawnedBall ? SpawnedBall->GetActorLocation() : CurrentStartActor->GetActorLocation();
+	FVector LaunchVelocity = ComputeLaunchVelocity();
+	TArray<FVector> Arc = CalculateArcPoints(StartLocation, LaunchVelocity, 30, 0.1f);
 	UpdateTrajectorySpline(Arc);
 }
-
-
-
 
 void AGolfGameManager::CancelShotAdjust()
 {
@@ -246,13 +152,13 @@ void AGolfGameManager::CancelShotAdjust()
 	bHasAdjusted = false;
 	RotationAngle = 0.0f;
 	AccumulatedInput = FVector2D::ZeroVector;
+	CurrentPower = 0;
 	UpdateTrajectorySpline({});
 }
 
 void AGolfGameManager::Shoot()
 {
 	if (!bHasStarted || !bIsAdjustingShot || !bHasAdjusted || bIsWaitingForBallToStop) return;
-
 	bIsAdjustingShot = false;
 	FVector LaunchVelocity = ComputeLaunchVelocity();
 
@@ -260,41 +166,34 @@ void AGolfGameManager::Shoot()
 	{
 		if (UPrimitiveComponent* BallRoot = Cast<UPrimitiveComponent>(SpawnedBall->GetRootComponent()))
 		{
-			BallRoot->AddImpulse(LaunchVelocity, NAME_None, true);
+			BallRoot->SetPhysicsLinearVelocity(LaunchVelocity, false);
 		}
 	}
 
 	UpdateTrajectorySpline({});
 	TimeSinceShot = 0.0f;
 	bIsWaitingForBallToStop = true;
+	CurrentPower = 0;
+	bHasAdjusted = false;
+	RotationAngle = 0.0f;
 }
 
 FVector AGolfGameManager::ComputeLaunchVelocity() const
 {
 	if (!CurrentStartActor) return FVector::ZeroVector;
 
-	float PowerScalar = 0.0f;
-	FVector UpwardBoost = FVector::ZeroVector;
+	FVector Forward = CurrentStartActor->GetActorForwardVector().GetSafeNormal();
 
-	switch (CurrentShotType)
+	if (CurrentShotType == EShotType::ChipShot)
 	{
-	case EShotType::LongShot:
-		PowerScalar = LongShotPower;
-		UpwardBoost = FVector(0, 0, 1000);
-		break;
-	case EShotType::ShortShot:
-		PowerScalar = ShortShotPower;
-		UpwardBoost = FVector(0, 0, 500);
-		break;
-	case EShotType::ChipShot:
-		PowerScalar = ChipShotPower;
-		break;
-	default:
-		break;
+		return Forward * (CurrentPower * ChipShotPower);
 	}
-
-	return CurrentStartActor->GetActorForwardVector().GetSafeNormal() * (CurrentPower * PowerScalar) + UpwardBoost;
+	else // LongShot
+	{
+		return Forward * (CurrentPower * LongShotPower) + FVector(0, 0, 1000);
+	}
 }
+
 
 TArray<FVector> AGolfGameManager::CalculateArcPoints(const FVector& Start, const FVector& Velocity, int Steps, float TimeStep)
 {
@@ -343,12 +242,6 @@ void AGolfGameManager::AfterShotSequence()
 {
 	if (!SpawnedBall) return;
 
-	// Increment score for the current hole
-	if (Holes.IsValidIndex(CurrentHoleIndex))
-	{
-		Holes[CurrentHoleIndex].Score += 1;
-	}
-
 	FVector FinalLocation = SpawnedBall->GetActorLocation();
 	FRotator FinalRotation = SpawnedBall->GetActorRotation();
 	SpawnedBall->Destroy();
@@ -361,21 +254,22 @@ void AGolfGameManager::AfterShotSequence()
 	}
 
 	SpawnBallAtCurrentPosition();
-	bIsAdjustingShot = false;
-	bHasAdjusted = false;
-	RotationAngle = 0.0f;
-	bIsWaitingForBallToStop = false;
+	bIsWaitingForBallToStop = false; // ✅ Reset here
 }
+
 
 void AGolfGameManager::SpawnBallAtCurrentPosition()
 {
-	if (!BallActorClass || !CurrentStartActor || !CurrentTargetActor) return;
-
+	if (!BallActorClass || !CurrentStartActor) return;
 	if (SpawnedBall) SpawnedBall->Destroy();
 
-	FVector ToTarget = (CurrentTargetActor->GetActorLocation() - CurrentStartActor->GetActorLocation()).GetSafeNormal();
-	FRotator NewRotation = ToTarget.Rotation();
-	CurrentStartActor->SetActorRotation(NewRotation);
+	FRotator NewRotation = FRotator::ZeroRotator;
+	if (AllTargets.Num() > 0)
+	{
+		FVector ToTarget = (AllTargets[0]->GetActorLocation() - CurrentStartActor->GetActorLocation()).GetSafeNormal();
+		NewRotation = ToTarget.Rotation();
+		CurrentStartActor->SetActorRotation(NewRotation);
+	}
 
 	FActorSpawnParameters SpawnParams;
 	SpawnedBall = GetWorld()->SpawnActor<AActor>(BallActorClass, CurrentStartActor->GetActorLocation(), NewRotation, SpawnParams);
@@ -395,9 +289,7 @@ void AGolfGameManager::SpawnBallAtCurrentPosition()
 
 void AGolfGameManager::StartGameSequence()
 {
-	bHasStarted = false;
 	bHasStarted = true;
-
 	if (GolfGameUIClass)
 	{
 		GolfGameUIInstance = CreateWidget<UUserWidget>(GetWorld(), GolfGameUIClass);
@@ -405,35 +297,14 @@ void AGolfGameManager::StartGameSequence()
 	}
 }
 
-FHoleData AGolfGameManager::GetCurrentHoleData() const
-{
-	return Holes.IsValidIndex(CurrentHoleIndex) ? Holes[CurrentHoleIndex] : FHoleData();
-}
-
-void AGolfGameManager::SetShotTypeToLong() { CurrentShotType = EShotType::LongShot; }
-void AGolfGameManager::SetShotTypeToShort() { CurrentShotType = EShotType::ShortShot; }
-void AGolfGameManager::SetShotTypeToChip() { CurrentShotType = EShotType::ChipShot; }
-
-
 void AGolfGameManager::HandleBallOutOfBounds()
 {
-	// Increment score for the current hole
-	if (Holes.IsValidIndex(CurrentHoleIndex))
-	{
-		Holes[CurrentHoleIndex].Score += 1;
-	}
-
-	// Reset ball to start position
 	if (SpawnedBall)
 	{
 		SpawnedBall->Destroy();
 		SpawnedBall = nullptr;
 	}
-
-	// Respawn ball at start
 	SpawnBallAtCurrentPosition();
-
-	// Reset shot state
 	bIsAdjustingShot = false;
 	bHasAdjusted = false;
 	RotationAngle = 0.0f;
@@ -441,36 +312,11 @@ void AGolfGameManager::HandleBallOutOfBounds()
 	TimeSinceShot = 0.0f;
 }
 
-
-void AGolfGameManager::HandleHoleCompleted()
+void AGolfGameManager::EndGame()
 {
-	// Advance to next hole
-	CurrentHoleIndex++;
-
-	if (Holes.IsValidIndex(CurrentHoleIndex))
-	{
-		CurrentStartActor = Holes[CurrentHoleIndex].StartPoint;
-		CurrentTargetActor = Holes[CurrentHoleIndex].HoleTarget;
-		// Set bounds if you use them
-		// CurrentBoundsActor = Holes[CurrentHoleIndex].HoleBounds;
-
-		// Destroy current ball
-		if (SpawnedBall)
-		{
-			SpawnedBall->Destroy();
-			SpawnedBall = nullptr;
-		}
-
-		// Set shot type to Long Shot for new hole
-		CurrentShotType = EShotType::LongShot;
-
-		// Spawn ball at new start
-		SpawnBallAtCurrentPosition();
-	}
-	else
-	{
-		// No more holes: end game or show results
-		UE_LOG(LogTemp, Log, TEXT("All holes completed!"));
-		// Optionally trigger end game UI/logic here
-	}
+	UGameplayStatics::OpenLevel(this, FName(*GetWorld()->GetName()), false);
 }
+
+
+void AGolfGameManager::SetShotTypeToLong() { CurrentShotType = EShotType::LongShot; }
+void AGolfGameManager::SetShotTypeToChip() { CurrentShotType = EShotType::ChipShot; }

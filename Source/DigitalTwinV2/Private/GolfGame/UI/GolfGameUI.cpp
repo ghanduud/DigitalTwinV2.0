@@ -15,10 +15,6 @@ void UGolfGameUI::NativeConstruct()
         LongShotBtn->OnClicked.AddDynamic(this, &UGolfGameUI::HandleLongShotClicked);
     }
 
-    if (ShortShotBtn)
-    {
-        ShortShotBtn->OnClicked.AddDynamic(this, &UGolfGameUI::HandleShortShotClicked);
-    }
 
     if (ChipShotBtn)
     {
@@ -38,13 +34,6 @@ void UGolfGameUI::HandleLongShotClicked()
     }
 }
 
-void UGolfGameUI::HandleShortShotClicked()
-{
-    if (AGolfGameManager* GM = AGolfGameManager::Get())
-    {
-        GM->SetShotTypeToShort();
-    }
-}
 
 void UGolfGameUI::HandleChipShotClicked()
 {

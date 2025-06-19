@@ -77,11 +77,11 @@ private:
 	float ZoomVelocity = 0.0f;
 
 private:
-    FVector2D Touch1Location;
-    FVector2D Touch2Location;
-    bool bTouch1Down = false;
-    bool bTouch2Down = false;
-    float PreviousTouchDistance = 0.0f;
+	FVector2D Touch1Location;
+	FVector2D Touch2Location;
+	bool bTouch1Down = false;
+	bool bTouch2Down = false;
+	float PreviousTouchDistance = 0.0f;
 
 
 
@@ -156,6 +156,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Camera Movement")
 	float DefaultZoom = 20000.0f;
 
+	UPROPERTY(EditAnywhere, Category = "Input")
+	float TouchDragSensitivity = 0.5f;
+
 	// Player controller
 	UPROPERTY()
 	class APlayerController* PlayerController;
@@ -206,6 +209,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Camera Movement")
 	void ApplyZoom(float Delta);
 
+	UFUNCTION(BlueprintCallable, Category = "Camera Movement")
+	void OnTouchPressed();
+
+	UFUNCTION(BlueprintCallable, Category = "Camera Movement")
+	void OnTouchReleased();
+
 
 
 
@@ -216,4 +225,10 @@ public:
 
 	UFUNCTION()
 	void SetInputEnabled(bool bEnabled);
+
+
+
+	FVector2D LastTouchPosition;
+
+	FVector2D SmoothedInputDelta = FVector2D::ZeroVector;
 };
