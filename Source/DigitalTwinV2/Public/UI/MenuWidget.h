@@ -5,11 +5,20 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "MenuWidget.generated.h"
-class UButton; 
+
+// Forward Declarations
+class UButton;
+class USlider;
+class UTextBlock;
+class ATwinUiManager;
+
+// Delegates
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTapChanged, EMenuTap, NewTap);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnSliderValueChanged, float, NewValue);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnWeatherChanged, EWeather, NewWeather);
 
 /**
- *
+ * UMenuWidget - Main menu widget for controlling UI filters and environmental state.
  */
 UCLASS()
 class DIGITALTWINV2_API UMenuWidget : public UUserWidget
@@ -19,31 +28,54 @@ class DIGITALTWINV2_API UMenuWidget : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 
+	// Delegates
 	UPROPERTY(BlueprintAssignable, Category = "Menu")
 	FOnTapChanged OnTapChanged;
 
+	UPROPERTY(BlueprintAssignable, Category = "Menu")
+	FOnWeatherChanged OnWeatherChanged;
+
+	UPROPERTY(BlueprintAssignable, Category = "Menu")
+	FOnSliderValueChanged OnSliderValueChanged;
+
+	// Reference to UI manager
 	UPROPERTY(BlueprintReadWrite, Category = "UI")
-	class ATwinUiManager* UiManager;
+	ATwinUiManager* UiManager;
+
+	// Public Bindings
 	UPROPERTY(meta = (BindWidget))
 	UButton* GolfGameButton;
 
-
 protected:
+	// Main Menu Buttons
 	UPROPERTY(meta = (BindWidget))
-	class UButton* OverviewButton;
-
-	UPROPERTY(meta = (BindWidget))
-	class UButton* FiltersButton;
+	UButton* OverviewButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* AtmosphereButton;
+	UButton* FiltersButton;
 
 	UPROPERTY(meta = (BindWidget))
-	class UButton* ResetButton;
+	UButton* AtmosphereButton;
 
+	UPROPERTY(meta = (BindWidget))
+	UButton* ResetButton;
 
+	// Time Controls
+	UPROPERTY(meta = (BindWidget))
+	USlider* DayNightSlider;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* TimeLabelText;
+
+	// Weather Controls
+	UPROPERTY(meta = (BindWidget))
+	UButton* SunnyBtn;
+
+	UPROPERTY(meta = (BindWidget))
+	UButton* RainBtn;
 
 private:
+	// Button Click Handlers
 	UFUNCTION()
 	void OnOverviewClicked();
 
@@ -56,4 +88,17 @@ private:
 	UFUNCTION()
 	void OnResetClicked();
 
+	UFUNCTION()
+	void OnSunnyBtnClicked();
+
+	UFUNCTION()
+	void OnRainBtnClicked();
+
+	// Slider Handler
+	UFUNCTION()
+	void HandleSliderValueChanged(float NewValue);
+
+	// Helper Methods
+	void SetSliderValue(float InValue);
+	void SetTime(float Time);
 };

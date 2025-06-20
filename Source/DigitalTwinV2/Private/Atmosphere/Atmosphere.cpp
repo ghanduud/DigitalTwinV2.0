@@ -132,6 +132,11 @@ void AAtmosphere::HandleWeatherChanged(EWeather NewWeather)
 		DestroyRainEffect();
 		break;
 
+	case EWeather::RainAndFog:
+		SetFogWeather();
+		SpawnRainEffectAttachedToCamera();
+		break;
+
 	default:
 		break;
 	}

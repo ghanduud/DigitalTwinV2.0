@@ -60,13 +60,7 @@ void ATwinUiManager::BeginPlay()
 		{
 			DayAndNightSlider->AddToViewport(); // Add it now, control visibility later
 
-			DayAndNightSlider->SetSliderValue(DayTime);
-
-			DayAndNightSlider->OnSliderValueChanged.AddDynamic(this, &ATwinUiManager::UpdateDayTimeFromSlider);
-
 			DayAndNightSlider->SetVisibility(ESlateVisibility::Collapsed); // Initially hidden, shown if Atmosphere is active
-
-			DayAndNightSlider->OnWeatherChanged.AddDynamic(this, &ATwinUiManager::SetCurrentWeather);
 		}
 	}
 
@@ -218,6 +212,10 @@ void ATwinUiManager::OnIntroSequenceFinished()
 			{
 				Menu->GolfGameButton->OnClicked.AddDynamic(this, &ATwinUiManager::OnGolfGameButtonClicked);
 			}
+
+            // Bind new time and weather controls to game logic
+            Menu->OnSliderValueChanged.AddDynamic(this, &ATwinUiManager::UpdateDayTimeFromSlider);
+            Menu->OnWeatherChanged.AddDynamic(this, &ATwinUiManager::SetCurrentWeather);
 		}
 	}
 

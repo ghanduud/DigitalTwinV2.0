@@ -20,6 +20,7 @@ enum class EWeather : uint8
 	Sunny    UMETA(DisplayName = "Sunny"),
 	Rain     UMETA(DisplayName = "Rain"),
 	Fog  	 UMETA(DisplayName = "Fog"),
+	RainAndFog UMETA(DisplayName = "RainAndFog"), // Added for merged effect
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDayTimeChanged, float, NewValue);
