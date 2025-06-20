@@ -135,8 +135,10 @@ void ATwinUiManager::UpdateUIVisibility()
     }
     if (WFilter) {
         WFilter->SetVisibility(CurrentTap == EMenuTap::Filters ? ESlateVisibility::Visible : ESlateVisibility::Collapsed);
-        // Hide all highlights if not in Filters tab
-        if (CurrentTap != EMenuTap::Filters) {
+        if (CurrentTap == EMenuTap::Filters) {
+            WFilter->ApplyStatusFilters();
+        } else {
+            // Hide all highlights if not in Filters tab
             UWorld* World = GetWorld();
             if (World && WFilter) {
                 for (TActorIterator<ABulding> It(World); It; ++It) {

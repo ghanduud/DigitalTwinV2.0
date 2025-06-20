@@ -7,7 +7,7 @@
 #include "FilterMenu.generated.h"
 
 
-class UCheckBox;
+class UButton;
 /**
  *
  */
@@ -20,30 +20,9 @@ class DIGITALTWINV2_API UFilterMenu : public UUserWidget
 public:
 	virtual void NativeConstruct() override;
 
-	TArray<UCheckBox*> AllCheckBoxes;
-
 
 
 	// These will point to your checkboxes in the widget
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* StandAloneVillaCheck;
-
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* OneStoryVillaCheck;
-
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* PalaceCheck;
-
-
-
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* AvailableCheck;
-
-	UPROPERTY(meta = (BindWidget))
-	UCheckBox* SoldCheck;
-
-
-
 	UPROPERTY(meta = (BindWidget))
 	class UButton* StandalonevillaButton;
 
@@ -55,25 +34,34 @@ public:
 
 
 
+	// Standalone Villa sub-filters
+	UPROPERTY(meta = (BindWidget))
+	UButton* AvailableStandAlone;
+	UPROPERTY(meta = (BindWidget))
+	UButton* ReservedStandAlone;
+	UPROPERTY(meta = (BindWidget))
+	UButton* SoldStandAlone;
+
+	// One Story Villa sub-filters
+	UPROPERTY(meta = (BindWidget))
+	UButton* AvailableOneStory;
+	UPROPERTY(meta = (BindWidget))
+	UButton* ReservedOneStory;
+	UPROPERTY(meta = (BindWidget))
+	UButton* SoldOneStory;
+
+	// Palace sub-filters
+	UPROPERTY(meta = (BindWidget))
+	UButton* AvailablePalace;
+	UPROPERTY(meta = (BindWidget))
+	UButton* ReservedPalace;
+	UPROPERTY(meta = (BindWidget))
+	UButton* SoldPalace;
+
+
+
 	protected:
 
-	UFUNCTION()
-	void StandAloneVillaCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void OneStoryVillaCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void PalaceCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void AvailableCheckChanged(bool bIsChecked);
-
-	UFUNCTION()
-	void SoldCheckChanged(bool bIsChecked);
-
-
-	void HandleExclusiveCheck(UCheckBox* CheckedOne);
 
 	UFUNCTION()
 	void OnStandalonevillaButtonClicked();
@@ -81,4 +69,52 @@ public:
 	void OnOneStoryvillaButtonClicked();
 	UFUNCTION()
 	void OnPalaceButtonClicked();
+
+
+	public:
+
+	UFUNCTION(BlueprintCallable)
+	void ApplyStatusFilters();
+
+private:
+	TArray<UButton*> StandAloneSubFilters;
+	TArray<UButton*> OneStorySubFilters;
+	TArray<UButton*> PalaceSubFilters;
+	void SetSubFiltersEnabled(const TArray<UButton*>& SubFilters, bool bEnabled);
+
+	// Add per-type active flags as member variables (move from file-scope to class-scope)
+	bool bStandaloneVillaMainFilterActive = true;
+	bool bOneStoryVillaMainFilterActive = true;
+	bool bPalaceMainFilterActive = true;
+
+	// Per-type, per-status sub-filter flags
+	bool bShowAvailableStandAlone = true;
+	bool bShowReservedStandAlone = true;
+	bool bShowSoldStandAlone = true;
+	bool bShowAvailableOneStory = true;
+	bool bShowReservedOneStory = true;
+	bool bShowSoldOneStory = true;
+	bool bShowAvailablePalace = true;
+	bool bShowReservedPalace = true;
+	bool bShowSoldPalace = true;
+
+	// Sub-filter button handlers
+	UFUNCTION()
+	void OnAvailableStandAloneClicked();
+	UFUNCTION()
+	void OnReservedStandAloneClicked();
+	UFUNCTION()
+	void OnSoldStandAloneClicked();
+	UFUNCTION()
+	void OnAvailableOneStoryClicked();
+	UFUNCTION()
+	void OnReservedOneStoryClicked();
+	UFUNCTION()
+	void OnSoldOneStoryClicked();
+	UFUNCTION()
+	void OnAvailablePalaceClicked();
+	UFUNCTION()
+	void OnReservedPalaceClicked();
+	UFUNCTION()
+	void OnSoldPalaceClicked();
 };

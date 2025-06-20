@@ -1,5 +1,4 @@
 #include "UI/FilterMenu.h"
-#include "Components/CheckBox.h"
 #include "Components/Button.h"
 #include "EngineUtils.h"
 #include "Buldings/Bulding.h"
@@ -9,257 +8,139 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "Math/UnrealMathUtility.h"
+#include "Components/Widget.h"
+#include "Components/PrimitiveComponent.h"
+
+bool bMainFilterActive = false;
+
+// Add per-type toggles at the top
+bool bStandaloneVillaMainFilterActive = false;
+bool bOneStoryVillaMainFilterActive = false;
+bool bPalaceMainFilterActive = false;
+
+// Helper to enable/disable sub-filters for a type (now UButton)
+void UFilterMenu::SetSubFiltersEnabled(const TArray<UButton*>& SubFilters, bool bEnabled)
+{
+    for (UButton* Btn : SubFilters)
+    {
+        if (Btn) Btn->SetIsEnabled(bEnabled);
+    }
+}
 
 void UFilterMenu::NativeConstruct()
 {
     Super::NativeConstruct();
 
-    AllCheckBoxes.Empty();
-    if (StandAloneVillaCheck) AllCheckBoxes.Add(StandAloneVillaCheck);
-    if (OneStoryVillaCheck) AllCheckBoxes.Add(OneStoryVillaCheck);
-    if (PalaceCheck) AllCheckBoxes.Add(PalaceCheck);
+    // --- Setup sub-filter arrays ---
+    StandAloneSubFilters = {AvailableStandAlone, ReservedStandAlone, SoldStandAlone};
+    OneStorySubFilters = {AvailableOneStory, ReservedOneStory, SoldOneStory};
+    PalaceSubFilters = {AvailablePalace, ReservedPalace, SoldPalace};
 
-    if (StandAloneVillaCheck)
-        StandAloneVillaCheck->OnCheckStateChanged.AddDynamic(this, &UFilterMenu::StandAloneVillaCheckChanged);
-    if (OneStoryVillaCheck)
-        OneStoryVillaCheck->OnCheckStateChanged.AddDynamic(this, &UFilterMenu::OneStoryVillaCheckChanged);
-    if (PalaceCheck)
-        PalaceCheck->OnCheckStateChanged.AddDynamic(this, &UFilterMenu::PalaceCheckChanged);
-
-    if (AvailableCheck)
-        AvailableCheck->OnCheckStateChanged.AddDynamic(this, &UFilterMenu::AvailableCheckChanged);
-    if (SoldCheck)
-        SoldCheck->OnCheckStateChanged.AddDynamic(this, &UFilterMenu::SoldCheckChanged);
-
-    if (StandalonevillaButton && StandAloneVillaCheck)
+    if (StandalonevillaButton)
         StandalonevillaButton->OnClicked.AddDynamic(this, &UFilterMenu::OnStandalonevillaButtonClicked);
-    if (OneStoryvillaButton && OneStoryVillaCheck)
+    if (OneStoryvillaButton)
         OneStoryvillaButton->OnClicked.AddDynamic(this, &UFilterMenu::OnOneStoryvillaButtonClicked);
-    if (PalaceButton && PalaceCheck)
+    if (PalaceButton)
         PalaceButton->OnClicked.AddDynamic(this, &UFilterMenu::OnPalaceButtonClicked);
+
+    // Bind sub-filter button handlers
+    if (AvailableStandAlone)
+        AvailableStandAlone->OnClicked.AddDynamic(this, &UFilterMenu::OnAvailableStandAloneClicked);
+    if (ReservedStandAlone)
+        ReservedStandAlone->OnClicked.AddDynamic(this, &UFilterMenu::OnReservedStandAloneClicked);
+    if (SoldStandAlone)
+        SoldStandAlone->OnClicked.AddDynamic(this, &UFilterMenu::OnSoldStandAloneClicked);
+    if (AvailableOneStory)
+        AvailableOneStory->OnClicked.AddDynamic(this, &UFilterMenu::OnAvailableOneStoryClicked);
+    if (ReservedOneStory)
+        ReservedOneStory->OnClicked.AddDynamic(this, &UFilterMenu::OnReservedOneStoryClicked);
+    if (SoldOneStory)
+        SoldOneStory->OnClicked.AddDynamic(this, &UFilterMenu::OnSoldOneStoryClicked);
+    if (AvailablePalace)
+        AvailablePalace->OnClicked.AddDynamic(this, &UFilterMenu::OnAvailablePalaceClicked);
+    if (ReservedPalace)
+        ReservedPalace->OnClicked.AddDynamic(this, &UFilterMenu::OnReservedPalaceClicked);
+    if (SoldPalace)
+        SoldPalace->OnClicked.AddDynamic(this, &UFilterMenu::OnSoldPalaceClicked);
 }
 
-// Individual handlers
-void UFilterMenu::StandAloneVillaCheckChanged(bool bIsChecked)
-{
-    UE_LOG(LogTemp, Warning, TEXT("[FilterMenu] StandAloneVillaCheckChanged called: %s"), bIsChecked ? TEXT("Checked") : TEXT("Unchecked"));
-    UWorld* World = GetWorld();
-    if (!World) return;
-    if (bIsChecked)
-    {
-        HandleExclusiveCheck(StandAloneVillaCheck);
-        // Highlight all StandAloneVilla buildings with light blue
-        for (TActorIterator<ABulding> It(World); It; ++It)
-        {
-            ABulding* Building = *It;
-            if (Building && Building->BuildingType == EBuildingType::StandAloneVilla)
-            {
-                Building->ShowHighlightBox(FLinearColor(0.1f, 0.4f, 1.0f, 0.5f));
-            }
-            else if (Building && Building->HighlightBox)
-            {
-                Building->HighlightBox->SetVisibility(false);
-                Building->HighlightBox->SetHiddenInGame(true);
-            }
-        }
-    }
-    else
-    {
-        // Remove highlight for StandAloneVilla buildings
-        for (TActorIterator<ABulding> It(World); It; ++It)
-        {
-            ABulding* Building = *It;
-            if (Building && Building->BuildingType == EBuildingType::StandAloneVilla && Building->HighlightBox)
-            {
-                Building->HighlightBox->SetVisibility(false);
-                Building->HighlightBox->SetHiddenInGame(true);
-            }
-        }
-    }
-}
-
-void UFilterMenu::OneStoryVillaCheckChanged(bool bIsChecked)
-{
-    UWorld* World = GetWorld();
-    if (!World) return;
-    if (bIsChecked)
-    {
-        HandleExclusiveCheck(OneStoryVillaCheck);
-        // Highlight all OneStoryVilla buildings with light blue
-        for (TActorIterator<ABulding> It(World); It; ++It)
-        {
-            ABulding* Building = *It;
-            if (Building && Building->BuildingType == EBuildingType::OneStoryVilla)
-            {
-                Building->ShowHighlightBox(FLinearColor(0.1f, 0.4f, 1.0f, 0.5f));
-            }
-            else if (Building && Building->HighlightBox)
-            {
-                Building->HighlightBox->SetVisibility(false);
-                Building->HighlightBox->SetHiddenInGame(true);
-            }
-        }
-    }
-    else
-    {
-        // Remove highlight for OneStoryVilla buildings
-        for (TActorIterator<ABulding> It(World); It; ++It)
-        {
-            ABulding* Building = *It;
-            if (Building && Building->BuildingType == EBuildingType::OneStoryVilla && Building->HighlightBox)
-            {
-                Building->HighlightBox->SetVisibility(false);
-                Building->HighlightBox->SetHiddenInGame(true);
-            }
-        }
-    }
-}
-
-void UFilterMenu::PalaceCheckChanged(bool bIsChecked)
-{
-    UWorld* World = GetWorld();
-    if (!World) return;
-    if (bIsChecked)
-    {
-        HandleExclusiveCheck(PalaceCheck);
-        // Highlight all Palace buildings with light blue
-        for (TActorIterator<ABulding> It(World); It; ++It)
-        {
-            ABulding* Building = *It;
-            if (Building && Building->BuildingType == EBuildingType::Palace)
-            {
-                Building->ShowHighlightBox(FLinearColor(0.1f, 0.4f, 1.0f, 0.5f));
-            }
-            else if (Building && Building->HighlightBox)
-            {
-                Building->HighlightBox->SetVisibility(false);
-                Building->HighlightBox->SetHiddenInGame(true);
-            }
-        }
-    }
-    else
-    {
-        // Remove highlight for Palace buildings
-        for (TActorIterator<ABulding> It(World); It; ++It)
-        {
-            ABulding* Building = *It;
-            if (Building && Building->BuildingType == EBuildingType::Palace && Building->HighlightBox)
-            {
-                Building->HighlightBox->SetVisibility(false);
-                Building->HighlightBox->SetHiddenInGame(true);
-            }
-        }
-    }
-}
-
-// --- Availability Check Handlers ---
-void UFilterMenu::AvailableCheckChanged(bool bIsChecked)
-{
-    if (bIsChecked && SoldCheck && SoldCheck->IsChecked()) {
-        SoldCheck->SetIsChecked(false);
-    }
-    UWorld* World = GetWorld();
-    if (!World) return;
-    EBuildingType SelectedType = EBuildingType::StandAloneVilla;
-    if (StandAloneVillaCheck && StandAloneVillaCheck->IsChecked()) SelectedType = EBuildingType::StandAloneVilla;
-    else if (OneStoryVillaCheck && OneStoryVillaCheck->IsChecked()) SelectedType = EBuildingType::OneStoryVilla;
-    else if (PalaceCheck && PalaceCheck->IsChecked()) SelectedType = EBuildingType::Palace;
-    if (bIsChecked)
-    {
-        for (TActorIterator<ABulding> It(World); It; ++It)
-        {
-            ABulding* Building = *It;
-            if (Building && Building->BuildingType == SelectedType && Building->bIsAvailable)
-                Building->ShowHighlightBox(FLinearColor(0.2f, 1.0f, 0.2f, 0.5f)); // Green
-            else if (Building && Building->BuildingType == SelectedType)
-                Building->ShowHighlightBox(FLinearColor(0.1f, 0.4f, 1.0f, 0.5f)); // Blue
-            else if (Building && Building->HighlightBox)
-            {
-                Building->HighlightBox->SetVisibility(false);
-                Building->HighlightBox->SetHiddenInGame(true);
-            }
-        }
-    }
-    else
-    {
-        // Restore blue highlight for all buildings of selected type (remove green highlight only)
-        for (TActorIterator<ABulding> It(World); It; ++It)
-        {
-            ABulding* Building = *It;
-            if (Building && Building->BuildingType == SelectedType)
-                Building->ShowHighlightBox(FLinearColor(0.1f, 0.4f, 1.0f, 0.5f)); // Blue
-        }
-    }
-}
-
-// --- Sold Check Handlers ---
-void UFilterMenu::SoldCheckChanged(bool bIsChecked)
-{
-    if (bIsChecked && AvailableCheck && AvailableCheck->IsChecked()) {
-        AvailableCheck->SetIsChecked(false);
-    }
-    UWorld* World = GetWorld();
-    if (!World) return;
-    EBuildingType SelectedType = EBuildingType::StandAloneVilla;
-    if (StandAloneVillaCheck && StandAloneVillaCheck->IsChecked()) SelectedType = EBuildingType::StandAloneVilla;
-    else if (OneStoryVillaCheck && OneStoryVillaCheck->IsChecked()) SelectedType = EBuildingType::OneStoryVilla;
-    else if (PalaceCheck && PalaceCheck->IsChecked()) SelectedType = EBuildingType::Palace;
-    if (bIsChecked)
-    {
-        for (TActorIterator<ABulding> It(World); It; ++It)
-        {
-            ABulding* Building = *It;
-            if (Building && Building->BuildingType == SelectedType && Building->Status == EBuildingStatus::Sold)
-                Building->ShowHighlightBox(FLinearColor(1.0f, 1.0f, 0.2f, 0.5f)); // Yellow
-            else if (Building && Building->BuildingType == SelectedType)
-                Building->ShowHighlightBox(FLinearColor(0.1f, 0.4f, 1.0f, 0.5f)); // Blue
-            else if (Building && Building->HighlightBox)
-            {
-                Building->HighlightBox->SetVisibility(false);
-                Building->HighlightBox->SetHiddenInGame(true);
-            }
-        }
-    }
-    else
-    {
-        // Restore blue highlight for all buildings of selected type (remove yellow highlight only)
-        for (TActorIterator<ABulding> It(World); It; ++It)
-        {
-            ABulding* Building = *It;
-            if (Building && Building->BuildingType == SelectedType)
-                Building->ShowHighlightBox(FLinearColor(0.1f, 0.4f, 1.0f, 0.5f)); // Blue
-        }
-    }
-}
-
-void UFilterMenu::HandleExclusiveCheck(UCheckBox* CheckedOne)
-{
-    for (UCheckBox* Box : AllCheckBoxes)
-    {
-        if (Box && Box != CheckedOne)
-        {
-            Box->SetIsChecked(false);
-        }
-    }
-}
-
+// --- Main Button Handlers ---
 void UFilterMenu::OnStandalonevillaButtonClicked()
 {
-    HandleExclusiveCheck(StandAloneVillaCheck);
-    StandAloneVillaCheck->SetIsChecked(true);
-    StandAloneVillaCheckChanged(true); // Directly call the filter logic
+    bStandaloneVillaMainFilterActive = !bStandaloneVillaMainFilterActive;
+    SetSubFiltersEnabled(StandAloneSubFilters, bStandaloneVillaMainFilterActive);
+    ApplyStatusFilters();
 }
 
 void UFilterMenu::OnOneStoryvillaButtonClicked()
 {
-    HandleExclusiveCheck(OneStoryVillaCheck);
-    OneStoryVillaCheck->SetIsChecked(true);
-    OneStoryVillaCheckChanged(true);
+    bOneStoryVillaMainFilterActive = !bOneStoryVillaMainFilterActive;
+    SetSubFiltersEnabled(OneStorySubFilters, bOneStoryVillaMainFilterActive);
+    ApplyStatusFilters();
 }
 
 void UFilterMenu::OnPalaceButtonClicked()
 {
-    HandleExclusiveCheck(PalaceCheck);
-    PalaceCheck->SetIsChecked(true);
-    PalaceCheckChanged(true);
+    bPalaceMainFilterActive = !bPalaceMainFilterActive;
+    SetSubFiltersEnabled(PalaceSubFilters, bPalaceMainFilterActive);
+    ApplyStatusFilters();
+}
+
+// Sub-filter button handlers
+#define define_toggle_handler(FuncName, Flag) \
+void FuncName() { Flag = !Flag; ApplyStatusFilters(); }
+
+define_toggle_handler(UFilterMenu::OnAvailableStandAloneClicked, bShowAvailableStandAlone)
+define_toggle_handler(UFilterMenu::OnReservedStandAloneClicked, bShowReservedStandAlone)
+define_toggle_handler(UFilterMenu::OnSoldStandAloneClicked, bShowSoldStandAlone)
+define_toggle_handler(UFilterMenu::OnAvailableOneStoryClicked, bShowAvailableOneStory)
+define_toggle_handler(UFilterMenu::OnReservedOneStoryClicked, bShowReservedOneStory)
+define_toggle_handler(UFilterMenu::OnSoldOneStoryClicked, bShowSoldOneStory)
+define_toggle_handler(UFilterMenu::OnAvailablePalaceClicked, bShowAvailablePalace)
+define_toggle_handler(UFilterMenu::OnReservedPalaceClicked, bShowReservedPalace)
+define_toggle_handler(UFilterMenu::OnSoldPalaceClicked, bShowSoldPalace)
+
+void UFilterMenu::ApplyStatusFilters()
+{
+    UWorld* World = GetWorld();
+    if (!World) return;
+
+    for (TActorIterator<ABulding> It(World); It; ++It)
+    {
+        ABulding* Building = *It;
+        if (!Building || !Building->HighlightBox) continue;
+
+        // Hide highlight by default
+        Building->HighlightBox->SetVisibility(false);
+        Building->HighlightBox->SetHiddenInGame(true);
+
+        // Show highlight by status if type and sub-filter are active
+        if (Building->BuildingType == EBuildingType::StandAloneVilla && bStandaloneVillaMainFilterActive)
+        {
+            if (Building->Status == EBuildingStatus::Available && bShowAvailableStandAlone)
+                Building->ShowHighlightBox(FLinearColor::Green);
+            else if (Building->Status == EBuildingStatus::Sold && bShowSoldStandAlone)
+                Building->ShowHighlightBox(FLinearColor::Red);
+            else if (Building->Status == EBuildingStatus::Reserved && bShowReservedStandAlone)
+                Building->ShowHighlightBox(FLinearColor(1.0f, 1.0f, 0.2f));
+        }
+        else if (Building->BuildingType == EBuildingType::OneStoryVilla && bOneStoryVillaMainFilterActive)
+        {
+            if (Building->Status == EBuildingStatus::Available && bShowAvailableOneStory)
+                Building->ShowHighlightBox(FLinearColor::Green);
+            else if (Building->Status == EBuildingStatus::Sold && bShowSoldOneStory)
+                Building->ShowHighlightBox(FLinearColor::Red);
+            else if (Building->Status == EBuildingStatus::Reserved && bShowReservedOneStory)
+                Building->ShowHighlightBox(FLinearColor(1.0f, 1.0f, 0.2f));
+        }
+        else if (Building->BuildingType == EBuildingType::Palace && bPalaceMainFilterActive)
+        {
+            if (Building->Status == EBuildingStatus::Available && bShowAvailablePalace)
+                Building->ShowHighlightBox(FLinearColor::Green);
+            else if (Building->Status == EBuildingStatus::Sold && bShowSoldPalace)
+                Building->ShowHighlightBox(FLinearColor::Red);
+            else if (Building->Status == EBuildingStatus::Reserved && bShowReservedPalace)
+                Building->ShowHighlightBox(FLinearColor(1.0f, 1.0f, 0.2f));
+        }
+    }
 }
