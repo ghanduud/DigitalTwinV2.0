@@ -191,6 +191,16 @@ void AGolfGameManager::CancelShotAdjust()
 	UpdateTrajectorySpline({});
 }
 
+void AGolfGameManager::OnMouseReleaseAndResumeMontage()
+{
+	if (CurrentShotType != EShotType::ChipShot && ThirdCharacter)
+	{
+		ThirdCharacter->CallFunctionByNameWithArguments(TEXT("ResumeMontage"), *GLog, nullptr, true);
+	}
+	// Delay Shoot() slightly to ensure animation resumes before shot logic
+	GetWorldTimerManager().SetTimer(AfterShotDelayHandle, this, &AGolfGameManager::Shoot, 0.05f, false);
+}
+
 void AGolfGameManager::Shoot()
 {
 	if (!bHasStarted || !bIsAdjustingShot || !bHasAdjusted || bIsWaitingForBallToStop) return;
@@ -210,10 +220,6 @@ void AGolfGameManager::Shoot()
 		if (CurrentShotType == EShotType::ChipShot)
 		{
 			ThirdCharacter->CallFunctionByNameWithArguments(TEXT("ChipShot"), *GLog, nullptr, true);
-		}
-		else
-		{
-			ThirdCharacter->CallFunctionByNameWithArguments(TEXT("ResumeMontage"), *GLog, nullptr, true);
 		}
 	}
 

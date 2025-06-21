@@ -249,6 +249,11 @@ public:
 	// Handles the AnimNotify from the montage to spawn the ball
 	UFUNCTION()
 	void HandleAnimNotify_SpawnBall(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload);
+
+
+	// Call this on mouse release to play ResumeMontage (if not ChipShot) and then shoot
+	UFUNCTION(BlueprintCallable, Category = "Golf|Shot")
+	void OnMouseReleaseAndResumeMontage();
 };
 
 

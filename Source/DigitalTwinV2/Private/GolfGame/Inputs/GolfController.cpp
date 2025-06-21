@@ -53,7 +53,7 @@ void AGolfController::HandleScreenRelease(const FInputActionValue& Value)
 {
     if (AGolfGameManager* GM = AGolfGameManager::Get())
     {
-        GM->Shoot();
+        GM->OnMouseReleaseAndResumeMontage();
     }
 }
 
