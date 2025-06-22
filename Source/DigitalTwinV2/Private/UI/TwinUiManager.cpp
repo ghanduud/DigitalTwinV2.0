@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "EngineUtils.h"
+#include "Engine/Engine.h"
 
 #include "UI/TwinUiManager.h"
 #include "Blueprint/UserWidget.h"
@@ -14,6 +15,7 @@
 #include "Buldings/GolfClubBuilding.h"
 #include "Camera/BirdEye.h"
 #include "Components/Button.h"
+#include "UI/Gallery.h"
 
 // Sets default values
 ATwinUiManager::ATwinUiManager()
@@ -37,6 +39,7 @@ void ATwinUiManager::BeginPlay()
 		{
 			WOverview->AddToViewport();
 			WOverview->SetVisibility(ESlateVisibility::Collapsed);
+			WOverview->UiManager = this; // Ensure UiManager is set!
 
 			// Bind the building change event to the OverviewWidget's SetBuilding method
 			OnCurrentBuildingChanged.AddDynamic(WOverview, &UOverviewWidget::SetBuilding);
@@ -61,6 +64,16 @@ void ATwinUiManager::BeginPlay()
 			DayAndNightSlider->AddToViewport(); // Add it now, control visibility later
 
 			DayAndNightSlider->SetVisibility(ESlateVisibility::Collapsed); // Initially hidden, shown if Atmosphere is active
+		}
+	}
+
+	if (GalleryWidgetClass)
+	{
+		WGallery = CreateWidget<UGallery>(GetWorld(), GalleryWidgetClass);
+		if (WGallery)
+		{
+			WGallery->AddToViewport();
+			WGallery->SetVisibility(ESlateVisibility::Collapsed);
 		}
 	}
 
@@ -145,6 +158,9 @@ void ATwinUiManager::UpdateUIVisibility()
             }
         }
     }
+    if (WGallery) {
+        WGallery->SetVisibility(ESlateVisibility::Collapsed);
+    }
 }
 
 
@@ -224,4 +240,46 @@ void ATwinUiManager::OnIntroSequenceFinished()
 void ATwinUiManager::OnGolfGameButtonClicked()
 {
 	UGameplayStatics::OpenLevel(this, FName("GolfGame"));
+}
+
+void ATwinUiManager::ShowGallery()
+{
+    UE_LOG(LogTemp, Warning, TEXT("ShowGallery called! WGallery=%p"), WGallery);
+    if (WGallery)
+    {
+        WGallery->SetVisibility(ESlateVisibility::Visible);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("WGallery is null in TwinUiManager!"));
+    }
+	if (WOverview)
+	{
+		WOverview->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (WFilter)
+	{
+		WFilter->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (DayAndNightSlider)
+	{
+		DayAndNightSlider->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	if (Menu)
+	{
+		Menu->SetVisibility(ESlateVisibility::Collapsed);
+	}
+}
+
+void ATwinUiManager::ShowOverview()
+{
+	if (WOverview)
+	{
+		WOverview->SetVisibility(ESlateVisibility::Visible);
+	}
+	if (WGallery)
+	{
+		WGallery->SetVisibility(ESlateVisibility::Collapsed);
+	}
+	UpdateUIVisibility();
 }

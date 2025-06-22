@@ -8,6 +8,7 @@
 
 class UImage;
 class UTexture2D;
+class ATwinUiManager; // Forward declaration for UiManager pointer
 
 /**
  *
@@ -28,8 +29,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Building")
 	void SetBuilding(ABulding* NewBuilding);
 
+	UPROPERTY(BlueprintReadWrite, Category = "UI")
+	ATwinUiManager* UiManager;
+
 protected:
 	virtual void NativeConstruct() override;
+
+	UFUNCTION()
+	void OnMediaGalleryClicked();
 
 	/** Default image asset path */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overview")
@@ -68,4 +75,7 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* TextBlock_Availability;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Button_MediaGallery;
 };

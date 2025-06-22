@@ -1,10 +1,13 @@
 #include "UI/OverviewWidget.h"
 #include "Components/Image.h"
 #include "Components/TextBlock.h"
+#include "Components/Button.h"
 #include "Engine/Texture2D.h"
 #include "Engine/StreamableManager.h"
 #include "Engine/AssetManager.h"
 #include "Buldings/Bulding.h"
+#include "UI/TwinUiManager.h"
+#include "Engine/Engine.h"
 
 UOverviewWidget::UOverviewWidget(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -19,6 +22,11 @@ void UOverviewWidget::NativeConstruct()
 
     // Load the default image when the widget is constructed
     SetUnitImageFromPath(DefaultImagePath);
+
+    if (Button_MediaGallery)
+    {
+        Button_MediaGallery->OnClicked.AddDynamic(this, &UOverviewWidget::OnMediaGalleryClicked);
+    }
 }
 
 void UOverviewWidget::SetUnitImageFromPath(const FString& AssetPath)
@@ -106,5 +114,18 @@ void UOverviewWidget::SetBuilding(ABulding* NewBuilding)
 
     if (NumberOfFloors)
         NumberOfFloors->SetText(FText::FromString(NewBuilding->NumberOfFloors));
+}
+
+void UOverviewWidget::OnMediaGalleryClicked()
+{
+    UE_LOG(LogTemp, Warning, TEXT("Button_MediaGallery clicked! UiManager=%p"), UiManager);
+    if (UiManager)
+    {
+        UiManager->ShowGallery();
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("UiManager is null in UOverviewWidget!"));
+    }
 }
 

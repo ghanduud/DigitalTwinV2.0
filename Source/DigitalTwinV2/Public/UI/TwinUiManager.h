@@ -63,6 +63,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "UI")
 	TSubclassOf<class UFilterMenu> FilterWidgetClass;
 
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<class UGallery> GalleryWidgetClass;
+
 
 
 
@@ -79,6 +82,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	class UMenuWidget* Menu;
+
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	class UGallery* WGallery;
 
 
 
@@ -146,6 +152,11 @@ public:
 	UFUNCTION()
 	void OnGolfGameButtonClicked();
 
+	UFUNCTION(BlueprintCallable, Category = "Gallery")
+	void ShowGallery();
+
+	UFUNCTION(BlueprintCallable, Category = "Gallery")
+	void ShowOverview();
 };
 
 
