@@ -145,11 +145,6 @@ void AGolfGameManager::BeginAdjustShot()
 	AccumulatedInput = FVector2D::ZeroVector;
 	OriginalStartRotation = CurrentStartActor->GetActorRotation();
 	RotationAngle = 0.0f;
-
-	if (ThirdCharacter)
-	{
-		ThirdCharacter->CallFunctionByNameWithArguments(TEXT("PlayMontageToHold"), *GLog, nullptr, true);
-	}
 }
 
 void AGolfGameManager::AdjustShot(const FVector2D& Delta)
@@ -204,10 +199,6 @@ void AGolfGameManager::CancelShotAdjust()
 
 void AGolfGameManager::OnMouseReleaseAndResumeMontage()
 {
-	if (CurrentShotType != EShotType::ChipShot && ThirdCharacter)
-	{
-		ThirdCharacter->CallFunctionByNameWithArguments(TEXT("ResumeMontage"), *GLog, nullptr, true);
-	}
 	// Delay Shoot() slightly to ensure animation resumes before shot logic
 	GetWorldTimerManager().SetTimer(AfterShotDelayHandle, this, &AGolfGameManager::Shoot, 0.05f, false);
 }
@@ -226,13 +217,6 @@ void AGolfGameManager::Shoot()
 		}
 	}
 
-	if (ThirdCharacter)
-	{
-		if (CurrentShotType == EShotType::ChipShot)
-		{
-			ThirdCharacter->CallFunctionByNameWithArguments(TEXT("ChipShot"), *GLog, nullptr, true);
-		}
-	}
 	if (SpawnedBall && TrailSystemTemplate)
 	{
 		UNiagaraComponent* Trail = UNiagaraFunctionLibrary::SpawnSystemAttached(

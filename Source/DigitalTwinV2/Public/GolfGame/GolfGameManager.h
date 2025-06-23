@@ -173,4 +173,8 @@ public:
 	// Call this on mouse release to play ResumeMontage (if not ChipShot) and then shoot
 	UFUNCTION(BlueprintCallable, Category = "Golf|Shot")
 	void OnMouseReleaseAndResumeMontage();
+
+	// Actor class used to find all start actors for golf holes
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf")
+	TSubclassOf<AActor> StartActorClass;
 };
