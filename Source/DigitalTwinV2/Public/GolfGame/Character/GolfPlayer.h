@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "GolfPlayer.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReachedStartPosition);
+
 UCLASS()
 class DIGITALTWINV2_API AGolfPlayer : public ACharacter
 {
@@ -29,9 +31,14 @@ public:
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 		class UAnimMontage* WalkMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	class UAnimMontage* LongShotMontage;
+	UAnimMontage* BallAimLongMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	class UAnimMontage* ChipShotMontage;
+	UAnimMontage* BallShootLongMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* BallAimShortMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	UAnimMontage* BallShootShortMontage;
+
 
 UFUNCTION(BlueprintCallable, Category = "Movement")
 void MoveTo(const FVector& TargetLocation);
@@ -39,12 +46,15 @@ UFUNCTION(BlueprintImplementableEvent, Category = "Animation")
 void Walkanim();
 
 
-private:
+public:
 FVector MoveTarget;
 bool bIsMoving = false;
 
 UPROPERTY(EditAnywhere, Category = "Movement")
 float MoveSpeed = 300.0f; // Adjust as needed
 
+// Delegate to notify when player reaches start position
+	UPROPERTY(BlueprintAssignable, Category = "Golf|Events")
+	FOnReachedStartPosition OnReachedStartPosition;
 
 };

@@ -36,16 +36,6 @@ void AGolfGameManager::BeginPlay()
 	Super::BeginPlay();
 	Instance = this;
 
-	// Bind AnimNotify
-	if (ThirdCharacter && ThirdCharacter->GetMesh())
-	{
-		UAnimInstance* AnimInstance = ThirdCharacter->GetMesh()->GetAnimInstance();
-		if (AnimInstance)
-		{
-			AnimInstance->OnPlayMontageNotifyBegin.AddDynamic(this, &AGolfGameManager::HandleAnimNotify_SpawnBall);
-		}
-	}
-
 	TArray<AActor*> FoundStarts;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), StartActorClass, FoundStarts);
 	if (FoundStarts.Num() > 0)
@@ -324,7 +314,7 @@ void AGolfGameManager::UpdateTrajectorySpline(const TArray<FVector>& Points)
 
 void AGolfGameManager::AfterShotSequence()
 {
-    if (!SpawnedBall || !ThirdCharacter) return;
+    if (!SpawnedBall || !GolfPlayer) return;
 
     FVector FinalLocation = SpawnedBall->GetActorLocation();
     FRotator FinalRotation = SpawnedBall->GetActorRotation();
@@ -337,14 +327,14 @@ void AGolfGameManager::AfterShotSequence()
         CurrentStartActor->SetActorRotation(FinalRotation);
     }
 
-    // Always move BP_Third to 60 units behind the ball, matching the ball's ground height
+    // Move GolfPlayer to 200 units behind and 100 units left of the ball
     FVector BallForward = CurrentStartActor->GetActorForwardVector();
-    FVector BehindBallLocation = FinalLocation - BallForward * 60.0f;
-    BehindBallLocation.Z = FinalLocation.Z; // Match ball's Z (height)
-    ThirdCharacter->SetActorLocation(BehindBallLocation);
+    FVector BallLeft = FRotationMatrix(CurrentStartActor->GetActorRotation()).GetUnitAxis(EAxis::Y) * -1.0f;
+    FVector MoveToLoc = FinalLocation - BallForward * 200.0f + BallLeft * 100.0f;
+    GolfPlayer->MoveTo(MoveToLoc);
 
     SpawnBallAtCurrentPosition();
-    bIsWaitingForBallToStop = false; // ✅ Reset here
+    bIsWaitingForBallToStop = false;
 	bShouldFollowBall = false;
 	BeginCameraTransitionToBall();
 }
@@ -402,7 +392,8 @@ void AGolfGameManager::SpawnBallAtCurrentPosition()
 
 void AGolfGameManager::StartGameSequence()
 {
-	SpawnBallAtCurrentPosition();
+	UE_LOG(LogTemp, Warning, TEXT("[GolfGameManager] StartGameSequence called"));
+    SpawnBallAtCurrentPosition();
 
 	// Start smooth camera move
 	BeginCameraTransitionToBall();
@@ -412,6 +403,34 @@ void AGolfGameManager::StartGameSequence()
 		GolfGameUIInstance = CreateWidget<UUserWidget>(GetWorld(), GolfGameUIClass);
 		if (GolfGameUIInstance) GolfGameUIInstance->AddToViewport();
 	}
+
+	if (GolfPlayer)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("[GolfGameManager] GolfPlayer is %s"), GolfPlayer ? TEXT("VALID") : TEXT("NULL"));
+        APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+        if (PC)
+        {
+            PC->Possess(GolfPlayer);
+            UE_LOG(LogTemp, Warning, TEXT("[GolfGameManager] PlayerController now possesses GolfPlayer: %s"), *GolfPlayer->GetName());
+            // Bind to the delegate so we know when the player reaches the start
+            GolfPlayer->OnReachedStartPosition.AddDynamic(this, &AGolfGameManager::OnGolfPlayerReachedStart);
+            // Move player to start position
+            if (CurrentStartActor)
+            {
+                GolfPlayer->MoveTo(CurrentStartActor->GetActorLocation());
+            }
+        }
+	}
+}
+
+
+void AGolfGameManager::OnGolfPlayerReachedStart()
+{
+    APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
+    if (PC)
+    {
+        PC->UnPossess(); // Only unpossess, do not possess the manager
+    }
 }
 
 

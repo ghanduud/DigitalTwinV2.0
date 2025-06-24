@@ -3,6 +3,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "GolfGame/Character/GolfPlayer.h" // Include AGolfPlayer header
+
 #include "GolfGameManager.generated.h"
 
 // Enumeration to define different shot types
@@ -162,8 +164,8 @@ public:
 	class UNiagaraSystem* TrailSystemTemplate;
 
 	// Reference to the MetaHuman Blueprint in the level
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	ACharacter* ThirdCharacter;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Player")
+	AGolfPlayer* GolfPlayer = nullptr;
 
 	// Handles the AnimNotify from the montage to spawn the ball
 	UFUNCTION()
@@ -177,4 +179,8 @@ public:
 	// Actor class used to find all start actors for golf holes
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf")
 	TSubclassOf<AActor> StartActorClass;
+
+	// Notifies when GolfPlayer reaches the start position
+	UFUNCTION()
+	void OnGolfPlayerReachedStart();
 };
