@@ -50,6 +50,8 @@ public:
 	UFUNCTION() void UpdateCameraLerp();
 	UFUNCTION() void BeginCameraTransitionToBallFollow();
 	UFUNCTION() void UpdateCameraLerpToFollow();
+	UFUNCTION() void OnBoundsExit(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UFUNCTION() void OnTargetOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 
 	// === Public Game Configuration ===
@@ -161,20 +163,17 @@ public:
 	UPROPERTY(EditAnywhere, Category = "VFX")
 	class UNiagaraSystem* TrailSystemTemplate;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation") TSubclassOf<class AGolfPlayer> ThirdCharacterClass;
+
 	// Reference to the MetaHuman Blueprint in the level
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	ACharacter* ThirdCharacter;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Animation") class AGolfPlayer* ThirdCharacter;
 
-	// Handles the AnimNotify from the montage to spawn the ball
-	UFUNCTION()
-	void HandleAnimNotify_SpawnBall(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload);
+	// // Handles the AnimNotify from the montage to spawn the ball
+	// UFUNCTION()
+	// void HandleAnimNotify_SpawnBall(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload);
 
 
-	// Call this on mouse release to play ResumeMontage (if not ChipShot) and then shoot
-	UFUNCTION(BlueprintCallable, Category = "Golf|Shot")
-	void OnMouseReleaseAndResumeMontage();
-
-	// Actor class used to find all start actors for golf holes
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf")
-	TSubclassOf<AActor> StartActorClass;
+	// // Call this on mouse release to play ResumeMontage (if not ChipShot) and then shoot
+	// UFUNCTION(BlueprintCallable, Category = "Golf|Shot")
+	// void OnMouseReleaseAndResumeMontage();
 };
