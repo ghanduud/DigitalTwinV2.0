@@ -38,6 +38,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Golf|Shot") void SetShotTypeToChip();
 	UFUNCTION(BlueprintCallable, Category = "Golf|Sequence") void StartGameSequence();
 	UFUNCTION(BlueprintCallable, Category = "Golf") void SpawnBallAtCurrentPosition();
+	UFUNCTION(BlueprintCallable, Category = "Golf|Shot") void PlayAimMontageAndDelayedShot();
 
 	// === Trajectory ===
 	UFUNCTION(BlueprintCallable, Category = "Trajectory") TArray<FVector> CalculateArcPoints(const FVector& Start, const FVector& Velocity, int Steps, float TimeStep);
@@ -159,11 +160,18 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Animation") TSubclassOf<class AGolfPlayer> ThirdCharacterClass;
 
-	// Reference to the MetaHuman Blueprint in the level
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation") class AGolfPlayer* ThirdCharacter;
+	// Reference to the GolfPlayer Blueprint in the level
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation") class AGolfPlayer* GolfPlayer;
+	
+	// Deprecated: Use GolfPlayer instead
+	// UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation") class AGolfPlayer* ThirdCharacter;
 
 
 	// // Call this on mouse release to play ResumeMontage (if not ChipShot) and then shoot
 	// UFUNCTION(BlueprintCallable, Category = "Golf|Shot")
 	// void OnMouseReleaseAndResumeMontage();
+
+	// === Input Events ===
+	// UFUNCTION(BlueprintCallable, Category = "Golf|Input") void OnMouseButtonDown();
+	// UFUNCTION(BlueprintCallable, Category = "Golf|Input") void OnMouseButtonUp();
 };

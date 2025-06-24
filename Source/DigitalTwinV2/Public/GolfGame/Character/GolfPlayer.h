@@ -29,14 +29,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
 	class UAnimMontage* WalkMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	class UAnimMontage* LongShotMontage;
+	class UAnimMontage* BallAimLongMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	class UAnimMontage* ChipShotMontage;
+	class UAnimMontage* BallShootLongMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	class UAnimMontage* BallAimChipMontage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
+	class UAnimMontage* BallShootChipMontage;
 
 	UFUNCTION(BlueprintCallable, Category = "Movement")
 	void MoveTo(const FVector& TargetLocation);
 	UFUNCTION(BlueprintImplementableEvent, Category = "Animation")
 	void Walkanim();
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayBallAimLongMontage();
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void StopBallAimLongMontage();
 
 
 private:

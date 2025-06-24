@@ -63,8 +63,6 @@ void AGolfPlayer::Tick(float DeltaTime)
 				}
 			}
 			bIsMoving = false;
-			// Notify listeners (e.g., manager) that we've reached the start position
-			OnReachedStartPosition.Broadcast();
 		}
 		else
 		{
@@ -97,5 +95,49 @@ void AGolfPlayer::MoveTo(const FVector& TargetLocation)
 			AnimInstance->Montage_Play(WalkMontage);
 		}
 	}
+}
+
+void AGolfPlayer::PlayBallAimLongMontage()
+{
+    if (BallAimLongMontage)
+    {
+        UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+        if (AnimInstance)
+        {
+            if (!AnimInstance->Montage_IsPlaying(BallAimLongMontage))
+            {
+                AnimInstance->Montage_Play(BallAimLongMontage, 1.0f);
+            }
+        }
+    }
+}
+
+void AGolfPlayer::StopBallAimLongMontage()
+{
+    UE_LOG(LogTemp, Warning, TEXT("StopBallAimLongMontage called"));
+    if (BallShootLongMontage)
+    {
+        UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+        if (AnimInstance)
+        {
+            if (AnimInstance->Montage_IsPlaying(BallShootLongMontage))
+            {
+                UE_LOG(LogTemp, Warning, TEXT("Stopping BallShootLongMontage"));
+                AnimInstance->Montage_Stop(0.1f, BallShootLongMontage);
+            }
+            else
+            {
+                UE_LOG(LogTemp, Warning, TEXT("BallShootLongMontage was not playing"));
+            }
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("AnimInstance is null in StopBallAimLongMontage"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("BallAimLongMontage is null in StopBallAimLongMontage"));
+    }
 }
 
