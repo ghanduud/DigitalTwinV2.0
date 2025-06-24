@@ -3,8 +3,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "GolfGame/Character/GolfPlayer.h" // Include AGolfPlayer header
-
 #include "GolfGameManager.generated.h"
 
 // Enumeration to define different shot types
@@ -52,6 +50,9 @@ public:
 	UFUNCTION() void UpdateCameraLerp();
 	UFUNCTION() void BeginCameraTransitionToBallFollow();
 	UFUNCTION() void UpdateCameraLerpToFollow();
+	UFUNCTION() void OnBoundsExit(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+	UFUNCTION() void OnTargetOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+	UFUNCTION() bool IsBallGrounded() const;
 
 
 	// === Public Game Configuration ===
@@ -66,6 +67,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Shot") float LongShotPower = 2000.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Shot") float ChipShotPower = 600.0f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Shot") float SwipeMultiplier = 10.0f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Shot") float StopVelocityThreshold = 70.0f;
 
 	// Scene actors
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf") AActor* CurrentStartActor = nullptr;
@@ -93,17 +95,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "UI") TSubclassOf<class UGolfEndGameMenu> GolfEndMenuClass;
 	UPROPERTY() UUserWidget* GolfGameUIInstance;
 
-
-
 	// Camera configuration
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Camera") AActor* FollowCameraActor = nullptr;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Camera") FVector CameraOffset = FVector(-400, 0, 200);
-
-
-
-
-
-
 
 private:
 	// Singleton instance
@@ -126,7 +120,7 @@ private:
 	float MinInputDistance = 1.0f;
 
 	// Ball movement state
-	float StopVelocityThreshold = 50.0f;
+
 	float TimeSinceShot = 0.0f;
 	float WaitBeforeCheckingStop = 0.5f;
 	FTimerHandle AfterShotDelayHandle;
@@ -139,7 +133,7 @@ private:
 	FVector CameraStartLocation;
 	FRotator CameraStartRotation;
 	float CameraLerpAlpha = 0.0f;
-	float CameraLerpDuration = 2.5f;
+	float CameraLerpDuration = 3.0f;
 	float CameraLerpFollowDuration = 0.5f;
 	FTimerHandle CameraLerpTimer;
 	FVector CameraDynamicOffset;
@@ -163,24 +157,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = "VFX")
 	class UNiagaraSystem* TrailSystemTemplate;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Animation") TSubclassOf<class AGolfPlayer> ThirdCharacterClass;
+
 	// Reference to the MetaHuman Blueprint in the level
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf|Player")
-	AGolfPlayer* GolfPlayer = nullptr;
-
-	// Handles the AnimNotify from the montage to spawn the ball
-	UFUNCTION()
-	void HandleAnimNotify_SpawnBall(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation") class AGolfPlayer* ThirdCharacter;
 
 
-	// Call this on mouse release to play ResumeMontage (if not ChipShot) and then shoot
-	UFUNCTION(BlueprintCallable, Category = "Golf|Shot")
-	void OnMouseReleaseAndResumeMontage();
-
-	// Actor class used to find all start actors for golf holes
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Golf")
-	TSubclassOf<AActor> StartActorClass;
-
-	// Notifies when GolfPlayer reaches the start position
-	UFUNCTION()
-	void OnGolfPlayerReachedStart();
+	// // Call this on mouse release to play ResumeMontage (if not ChipShot) and then shoot
+	// UFUNCTION(BlueprintCallable, Category = "Golf|Shot")
+	// void OnMouseReleaseAndResumeMontage();
 };

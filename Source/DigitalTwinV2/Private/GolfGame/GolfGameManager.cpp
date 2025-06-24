@@ -18,6 +18,8 @@
 #include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
 #include "GolfGame/UI/GolfEndGameMenu.h"
+#include "GolfGame/Character/GolfPlayer.h"
+#include "Components/CapsuleComponent.h"
 
 AGolfGameManager* AGolfGameManager::Instance = nullptr;
 
@@ -36,9 +38,7 @@ void AGolfGameManager::BeginPlay()
 	Super::BeginPlay();
 	Instance = this;
 
-	TArray<AActor*> FoundStarts;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), StartActorClass, FoundStarts);
-	if (FoundStarts.Num() > 0)
+
 	if (GolfStartMenuClass)
 	{
 		UGolfStartMenu* StartMenu = CreateWidget<UGolfStartMenu>(GetWorld(), GolfStartMenuClass);
@@ -53,18 +53,20 @@ void AGolfGameManager::BeginPlay()
 		FollowCameraActor->SetActorLocation(MenuCameraTransform.GetLocation());
 		FollowCameraActor->SetActorRotation(MenuCameraTransform.GetRotation().Rotator());
 	}
+
+
+	for (AActor* TargetActor : AllTargets)
+	{
+		if (!TargetActor) continue;
+		UBoxComponent* TargetBox = TargetActor->FindComponentByClass<UBoxComponent>();
+		if (!TargetBox) continue;
+		TargetBox->OnComponentBeginOverlap.AddDynamic(this, &AGolfGameManager::OnTargetOverlap);
+	}
 }
 
 void AGolfGameManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (FollowCameraActor && SpawnedBall)
-	{
-		FVector BallLocation = SpawnedBall->GetActorLocation();
-		FVector CameraLocation = BallLocation + CameraOffset;
-		FollowCameraActor->SetActorLocation(CameraLocation);
-	}
 
 	if (!bIsWaitingForBallToStop || !SpawnedBall) return;
 
@@ -72,7 +74,7 @@ void AGolfGameManager::Tick(float DeltaTime)
 	if (TimeSinceShot < WaitBeforeCheckingStop) return;
 
 	UPrimitiveComponent* BallRoot = Cast<UPrimitiveComponent>(SpawnedBall->GetRootComponent());
-	if (BallRoot && BallRoot->GetComponentVelocity().Size() < StopVelocityThreshold)
+	if (BallRoot && BallRoot->GetComponentVelocity().Size() < StopVelocityThreshold && IsBallGrounded())
 	{
 		AfterShotSequence();
 	}
@@ -93,22 +95,21 @@ void AGolfGameManager::Tick(float DeltaTime)
 		}
 	}
 
-	// Entered hole
-	for (AActor* TargetActor : AllTargets)
-	{
-		if (!TargetActor) continue;
-		UBoxComponent* TargetBox = TargetActor->FindComponentByClass<UBoxComponent>();
-		if (!TargetBox) continue;
+	// for (AActor* TargetActor : AllTargets)
+	// {
+	// 	if (!TargetActor) continue;
+	// 	UBoxComponent* TargetBox = TargetActor->FindComponentByClass<UBoxComponent>();
+	// 	if (!TargetBox) continue;
 
-		FVector LocalPos = TargetBox->GetComponentTransform().InverseTransformPosition(SpawnedBall->GetActorLocation());
-		FVector Extent = TargetBox->GetUnscaledBoxExtent();
+	// 	FVector LocalPos = TargetBox->GetComponentTransform().InverseTransformPosition(SpawnedBall->GetActorLocation());
+	// 	FVector Extent = TargetBox->GetUnscaledBoxExtent();
 
-		if (FMath::Abs(LocalPos.X) <= Extent.X && FMath::Abs(LocalPos.Y) <= Extent.Y && FMath::Abs(LocalPos.Z) <= Extent.Z)
-		{
-			EndGame();
-			return;
-		}
-	}
+	// 	if (FMath::Abs(LocalPos.X) <= Extent.X && FMath::Abs(LocalPos.Y) <= Extent.Y && FMath::Abs(LocalPos.Z) <= Extent.Z)
+	// 	{
+	// 		EndGame();
+	// 		return;
+	// 	}
+	// }
 
 
 	if (bShouldFollowBall && SpawnedBall && FollowCameraActor)
@@ -121,8 +122,6 @@ void AGolfGameManager::Tick(float DeltaTime)
 			DeltaTime,
 			5.0f
 		));
-
-		// ✅ Do NOT update rotation here
 	}
 
 }
@@ -187,11 +186,11 @@ void AGolfGameManager::CancelShotAdjust()
 	UpdateTrajectorySpline({});
 }
 
-void AGolfGameManager::OnMouseReleaseAndResumeMontage()
-{
-	// Delay Shoot() slightly to ensure animation resumes before shot logic
-	GetWorldTimerManager().SetTimer(AfterShotDelayHandle, this, &AGolfGameManager::Shoot, 0.05f, false);
-}
+// void AGolfGameManager::OnMouseReleaseAndResumeMontage()
+// {
+// 	// Delay Shoot() slightly to ensure animation resumes before shot logic
+// 	GetWorldTimerManager().SetTimer(AfterShotDelayHandle, this, &AGolfGameManager::Shoot, 0.05f, false);
+// }
 
 void AGolfGameManager::Shoot()
 {
@@ -203,8 +202,10 @@ void AGolfGameManager::Shoot()
 	{
 		if (UPrimitiveComponent* BallRoot = Cast<UPrimitiveComponent>(SpawnedBall->GetRootComponent()))
 		{
+			BallRoot->SetSimulatePhysics(true); // ✅ Enable movement
 			BallRoot->SetPhysicsLinearVelocity(LaunchVelocity, false);
 		}
+
 	}
 
 	if (SpawnedBall && TrailSystemTemplate)
@@ -314,27 +315,27 @@ void AGolfGameManager::UpdateTrajectorySpline(const TArray<FVector>& Points)
 
 void AGolfGameManager::AfterShotSequence()
 {
-    if (!SpawnedBall || !GolfPlayer) return;
+	// if (!SpawnedBall || !ThirdCharacter) return;
+	if (!SpawnedBall) return;
 
-    FVector FinalLocation = SpawnedBall->GetActorLocation();
-    FRotator FinalRotation = SpawnedBall->GetActorRotation();
-    SpawnedBall->Destroy();
-    SpawnedBall = nullptr;
+	FVector FinalLocation = SpawnedBall->GetActorLocation();
+	FRotator FinalRotation = SpawnedBall->GetActorRotation();
+	SpawnedBall->Destroy();
+	SpawnedBall = nullptr;
 
-    if (CurrentStartActor)
-    {
-        CurrentStartActor->SetActorLocation(FinalLocation);
-        CurrentStartActor->SetActorRotation(FinalRotation);
-    }
+	if (CurrentStartActor)
+	{
+		CurrentStartActor->SetActorLocation(FinalLocation);
+		CurrentStartActor->SetActorRotation(FinalRotation);
+	}
 
-    // Move GolfPlayer to 200 units behind and 100 units left of the ball
-    FVector BallForward = CurrentStartActor->GetActorForwardVector();
-    FVector BallLeft = FRotationMatrix(CurrentStartActor->GetActorRotation()).GetUnitAxis(EAxis::Y) * -1.0f;
-    FVector MoveToLoc = FinalLocation - BallForward * 200.0f + BallLeft * 100.0f;
-    GolfPlayer->MoveTo(MoveToLoc);
+	FVector BallForward = CurrentStartActor->GetActorForwardVector();
+	FVector BehindBallLocation = FinalLocation - BallForward * 60.0f;
+	BehindBallLocation.Z = FinalLocation.Z; // Match ball's Z (height)
+	// ThirdCharacter->SetActorLocation(BehindBallLocation);
 
-    SpawnBallAtCurrentPosition();
-    bIsWaitingForBallToStop = false;
+	SpawnBallAtCurrentPosition();
+	bIsWaitingForBallToStop = false; // ✅ Reset here
 	bShouldFollowBall = false;
 	BeginCameraTransitionToBall();
 }
@@ -342,12 +343,12 @@ void AGolfGameManager::AfterShotSequence()
 
 void AGolfGameManager::SpawnBallAtCurrentPosition()
 {
-    if (!BallActorClass || !CurrentStartActor) return;
-    if (SpawnedBall) SpawnedBall->Destroy();
+	if (!BallActorClass || !CurrentStartActor) return;
+	if (SpawnedBall) SpawnedBall->Destroy();
 
 	AActor* NearestTarget = nullptr;
 	float MinDistanceSqr = TNumericLimits<float>::Max();
-	FVector StartLocation = CurrentStartActor->GetActorLocation() + FVector(0, 0, 3.0f);
+	FVector StartLocation = CurrentStartActor->GetActorLocation();
 
 	// Find nearest target
 	for (AActor* Target : AllTargets)
@@ -364,12 +365,18 @@ void AGolfGameManager::SpawnBallAtCurrentPosition()
 
 	// Face toward nearest target if one is found
 	FRotator NewRotation = FRotator::ZeroRotator;
+	// Face toward nearest target if one is found
+// Face toward nearest target if one is found
 	if (NearestTarget)
 	{
-		FVector ToTarget = (NearestTarget->GetActorLocation() - StartLocation).GetSafeNormal();
-		NewRotation = ToTarget.Rotation();
+		FVector ToTarget = (NearestTarget->GetActorLocation() - StartLocation).GetSafeNormal2D(); // Ignore Z
+		FRotator LookAtRotation = ToTarget.Rotation(); // Gives yaw-only when using .GetSafeNormal2D()
+
+		NewRotation = FRotator(0.0f, LookAtRotation.Yaw, 0.0f); // Only rotate around Z axis (yaw)
+
 		CurrentStartActor->SetActorRotation(NewRotation);
 	}
+
 
 	// Spawn the ball
 	FActorSpawnParameters SpawnParams;
@@ -387,13 +394,60 @@ void AGolfGameManager::SpawnBallAtCurrentPosition()
 			TrajectorySpline = BallSpline;
 		}
 	}
+
+	if (SpawnedBall)
+	{
+		UPrimitiveComponent* BallRoot = Cast<UPrimitiveComponent>(SpawnedBall->GetRootComponent());
+		if (BallRoot)
+		{
+			BallRoot->SetSimulatePhysics(false); // 🔒 Prevent movement
+			BallRoot->SetPhysicsLinearVelocity(FVector::ZeroVector); // Clear any residual velocity
+		}
+	}
+
+
+	if (ThirdCharacterClass)
+	{
+		if (ThirdCharacter)
+		{
+			ThirdCharacter->Destroy();
+			ThirdCharacter = nullptr;
+		}
+
+		if (ThirdCharacterClass)
+		{
+			FActorSpawnParameters CharacterSpawnParams;
+			CharacterSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+
+			FVector BallLocation = SpawnedBall->GetActorLocation();
+			FVector BallForward = CurrentStartActor->GetActorForwardVector();
+			FVector BallRight = FVector::CrossProduct(FVector::UpVector, BallForward);
+			float CapsuleHalfHeight = 0.0f;
+			if (AGolfPlayer* DefaultGolfPlayer = Cast<AGolfPlayer>(ThirdCharacterClass->GetDefaultObject()))
+			{
+				CapsuleHalfHeight = DefaultGolfPlayer->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
+			}
+
+			FVector SpawnLocation = BallLocation - BallForward * 500 - BallRight * 200 + FVector(0, 0, CapsuleHalfHeight);
+			FRotator SpawnRotation = BallForward.Rotation();
+
+			ThirdCharacter = GetWorld()->SpawnActor<AGolfPlayer>(ThirdCharacterClass, SpawnLocation, SpawnRotation, CharacterSpawnParams);
+
+			if (ThirdCharacter)
+			{
+				FVector TargetLocation = BallLocation - BallRight * 200;
+				TargetLocation.Z += CapsuleHalfHeight;
+
+				ThirdCharacter->MoveTo(TargetLocation);
+			}
+		}
+	}
 }
 
 
 void AGolfGameManager::StartGameSequence()
 {
-	UE_LOG(LogTemp, Warning, TEXT("[GolfGameManager] StartGameSequence called"));
-    SpawnBallAtCurrentPosition();
+	SpawnBallAtCurrentPosition();
 
 	// Start smooth camera move
 	BeginCameraTransitionToBall();
@@ -403,34 +457,6 @@ void AGolfGameManager::StartGameSequence()
 		GolfGameUIInstance = CreateWidget<UUserWidget>(GetWorld(), GolfGameUIClass);
 		if (GolfGameUIInstance) GolfGameUIInstance->AddToViewport();
 	}
-
-	if (GolfPlayer)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[GolfGameManager] GolfPlayer is %s"), GolfPlayer ? TEXT("VALID") : TEXT("NULL"));
-        APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-        if (PC)
-        {
-            PC->Possess(GolfPlayer);
-            UE_LOG(LogTemp, Warning, TEXT("[GolfGameManager] PlayerController now possesses GolfPlayer: %s"), *GolfPlayer->GetName());
-            // Bind to the delegate so we know when the player reaches the start
-            GolfPlayer->OnReachedStartPosition.AddDynamic(this, &AGolfGameManager::OnGolfPlayerReachedStart);
-            // Move player to start position
-            if (CurrentStartActor)
-            {
-                GolfPlayer->MoveTo(CurrentStartActor->GetActorLocation());
-            }
-        }
-	}
-}
-
-
-void AGolfGameManager::OnGolfPlayerReachedStart()
-{
-    APlayerController* PC = UGameplayStatics::GetPlayerController(this, 0);
-    if (PC)
-    {
-        PC->UnPossess(); // Only unpossess, do not possess the manager
-    }
 }
 
 
@@ -492,16 +518,6 @@ void AGolfGameManager::EndGame()
 void AGolfGameManager::SetShotTypeToLong() { CurrentShotType = EShotType::LongShot; }
 void AGolfGameManager::SetShotTypeToChip() { CurrentShotType = EShotType::ChipShot; }
 
-void AGolfGameManager::HandleAnimNotify_SpawnBall(FName NotifyName, const FBranchingPointNotifyPayload& BranchingPointPayload)
-{
-    this->SpawnBallAtCurrentPosition();
-    FVector LaunchVelocity = this->ComputeLaunchVelocity();
-    if (this->SpawnedBall)
-    {
-        this->SpawnedBall->GetRootComponent()->ComponentVelocity = LaunchVelocity;
-    }
-
-}
 void AGolfGameManager::BeginCameraTransitionToBall()
 {
 	if (!FollowCameraActor || !CurrentStartActor) return;
@@ -620,4 +636,39 @@ void AGolfGameManager::UpdateCameraLerpToFollow()
 		GetWorld()->GetTimerManager().ClearTimer(CameraLerpTimer);
 		bShouldFollowBall = true; // Start following position
 	}
+}
+
+
+void AGolfGameManager::OnBoundsExit(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (OtherActor == SpawnedBall)
+	{
+		HandleBallOutOfBounds();
+	}
+}
+
+
+void AGolfGameManager::OnTargetOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor == SpawnedBall && OtherComp && OtherComp->ComponentHasTag(FName("BallCollider")))
+	{
+		EndGame();
+	}
+
+}
+
+
+bool AGolfGameManager::IsBallGrounded() const
+{
+	if (!SpawnedBall) return false;
+
+	FVector BallLocation = SpawnedBall->GetActorLocation();
+	FVector Start = BallLocation;
+	FVector End = BallLocation - FVector(0, 0, 20.0f); // Adjust the Z distance as needed
+
+	FCollisionQueryParams Params;
+	Params.AddIgnoredActor(SpawnedBall);
+
+	FHitResult HitResult;
+	return GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
 }

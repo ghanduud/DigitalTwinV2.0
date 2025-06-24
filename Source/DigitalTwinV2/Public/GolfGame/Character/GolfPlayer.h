@@ -6,8 +6,6 @@
 #include "GameFramework/Character.h"
 #include "GolfPlayer.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReachedStartPosition);
-
 UCLASS()
 class DIGITALTWINV2_API AGolfPlayer : public ACharacter
 {
@@ -21,40 +19,32 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
-public:	
+public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-	
-		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-		class UAnimMontage* WalkMontage;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* BallAimLongMontage;
+	class UAnimMontage* WalkMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* BallShootLongMontage;
+	class UAnimMontage* LongShotMontage;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* BallAimShortMontage;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation")
-	UAnimMontage* BallShootShortMontage;
+	class UAnimMontage* ChipShotMontage;
+
+	UFUNCTION(BlueprintCallable, Category = "Movement")
+	void MoveTo(const FVector& TargetLocation);
+	UFUNCTION(BlueprintImplementableEvent, Category = "Animation")
+	void Walkanim();
 
 
-UFUNCTION(BlueprintCallable, Category = "Movement")
-void MoveTo(const FVector& TargetLocation);
-UFUNCTION(BlueprintImplementableEvent, Category = "Animation")
-void Walkanim();
+private:
+	FVector MoveTarget;
+	bool bIsMoving = false;
 
+	UPROPERTY(EditAnywhere, Category = "Movement")
+	float MoveSpeed = 300.0f; // Adjust as needed
 
-public:
-FVector MoveTarget;
-bool bIsMoving = false;
-
-UPROPERTY(EditAnywhere, Category = "Movement")
-float MoveSpeed = 300.0f; // Adjust as needed
-
-// Delegate to notify when player reaches start position
-	UPROPERTY(BlueprintAssignable, Category = "Golf|Events")
-	FOnReachedStartPosition OnReachedStartPosition;
 
 };
