@@ -10,7 +10,7 @@
 // Sets default values
 AGolfPlayer::AGolfPlayer()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 
@@ -21,11 +21,11 @@ void AGolfPlayer::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FVector ForwardDirection = GetActorForwardVector();
-	FVector StartLocation = GetActorLocation();
-	FVector TargetLocation = StartLocation + ForwardDirection * 2000.0f;
+	// FVector ForwardDirection = GetActorForwardVector();
+	// FVector StartLocation = GetActorLocation();
+	// FVector TargetLocation = StartLocation + ForwardDirection * 2000.0f;
 
-	MoveTo(TargetLocation);
+	// MoveTo(TargetLocation);
 }
 
 
