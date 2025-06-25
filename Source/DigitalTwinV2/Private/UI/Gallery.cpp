@@ -114,16 +114,8 @@ void UGallery::SetGalleryImages(const TArray<FString>& ImagePaths)
 
 void UGallery::OnExitButtonClicked()
 {
-    // Use UiManager property directly from the header
-    if (this->UiManager)
-    {
-        SetVisibility(ESlateVisibility::Collapsed);
-        this->UiManager->ShowOverview();
-    }
-    else
-    {
-        SetVisibility(ESlateVisibility::Collapsed);
-    }
+    // Only hide/collapse the gallery, do not affect the menu or call ShowOverview
+    SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UGallery::OnArrowRightClicked()
