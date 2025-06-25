@@ -63,6 +63,8 @@ void AGolfPlayer::Tick(float DeltaTime)
 				}
 			}
 			bIsMoving = false;
+			// Notify listeners (e.g., manager) that we've reached the start position
+			OnReachedStartPosition.Broadcast();
 		}
 		else
 		{
