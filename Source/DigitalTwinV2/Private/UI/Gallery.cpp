@@ -9,6 +9,8 @@
 #include "Components/Button.h"
 #include "UI/TwinUiManager.h"
 
+#include "UI/OverviewWidget.h" // Add this include for UOverviewWidget
+
 // Explicitly include the header for the UiManager property
 #include "n:\UE5_courseGame\DigitalTwinV2.0\Source\DigitalTwinV2\Public\UI\Gallery.h"
 
@@ -21,11 +23,6 @@ UGallery::UGallery(const FObjectInitializer& ObjectInitializer)
 void UGallery::NativeConstruct()
 {
 	Super::NativeConstruct();
-	// Widget setup logic (if needed)
-	if (Button_Exit)
-	{
-		Button_Exit->OnClicked.AddDynamic(this, &UGallery::OnExitButtonClicked);
-	}
 	if (ButtonImage1)
 	{
 		ButtonImage1->OnClicked.AddDynamic(this, &UGallery::OnGalleryImage1Clicked);
@@ -53,6 +50,10 @@ void UGallery::NativeConstruct()
 	if (Button_Arrow_Left)
 	{
 		Button_Arrow_Left->OnClicked.AddDynamic(this, &UGallery::OnArrowLeftClicked);
+	}
+	if (Button_Exit)
+	{
+		Button_Exit->OnClicked.AddDynamic(this, &UGallery::OnExitButtonClicked);
 	}
 	if (GalleryImagesArray.Num() > 0)
 	{
@@ -114,7 +115,12 @@ void UGallery::SetGalleryImages(const TArray<FString>& ImagePaths)
 
 void UGallery::OnExitButtonClicked()
 {
-    // Only hide/collapse the gallery, do not affect the menu or call ShowOverview
+    // Collapse the overview when exit is pressed, if UiManager and WOverview are valid
+    if (UiManager && UiManager->WOverview)
+    {
+        UiManager->WOverview->SetVisibility(ESlateVisibility::Collapsed);
+    }
+    // Optionally, also collapse the gallery itself
     SetVisibility(ESlateVisibility::Collapsed);
 }
 

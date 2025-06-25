@@ -28,6 +28,11 @@ void UOverviewWidget::NativeConstruct()
     {
         Button_MediaGallery->OnClicked.AddDynamic(this, &UOverviewWidget::OnMediaGalleryClicked);
     }
+
+    if (ExitButton)
+    {
+        ExitButton->OnClicked.AddDynamic(this, &UOverviewWidget::OnExitButtonClicked);
+    }
 }
 
 void UOverviewWidget::SetUnitImageFromPath(const FString& AssetPath)
@@ -161,5 +166,10 @@ void UOverviewWidget::OnMediaGalleryClicked()
     {
         UE_LOG(LogTemp, Error, TEXT("UiManager is null in UOverviewWidget!"));
     }
+}
+
+void UOverviewWidget::OnExitButtonClicked()
+{
+    SetVisibility(ESlateVisibility::Collapsed);
 }
 

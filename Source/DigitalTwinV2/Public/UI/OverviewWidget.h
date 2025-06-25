@@ -38,6 +38,9 @@ protected:
 	UFUNCTION()
 	void OnMediaGalleryClicked();
 
+	UFUNCTION()
+	void OnExitButtonClicked();
+
 	/** Default image asset path */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Overview")
 	FString DefaultImagePath;
@@ -78,4 +81,7 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Button_MediaGallery;
+
+	UPROPERTY(meta = (BindWidget))
+	class UButton* ExitButton;
 };

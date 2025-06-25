@@ -39,8 +39,6 @@ protected:
 	UPROPERTY(meta = (BindWidget))
 	class UImage* GalleryImage5;
 	UPROPERTY(meta = (BindWidget))
-	class UButton* Button_Exit;
-	UPROPERTY(meta = (BindWidget))
 	class UImage* Image_Large;
 
 	// Array to hold image paths for the gallery, can be set from C++ or Blueprint
@@ -90,4 +88,8 @@ protected:
 	void OnArrowRightClicked();
 	UFUNCTION()
 	void OnArrowLeftClicked();
+
+	// Add UPROPERTY for Button_Exit
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Button_Exit;
 };

@@ -253,22 +253,17 @@ void ATwinUiManager::ShowGallery()
     {
         UE_LOG(LogTemp, Error, TEXT("WGallery is null in TwinUiManager!"));
     }
-	if (WOverview)
-	{
-		WOverview->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	if (WFilter)
-	{
-		WFilter->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	if (DayAndNightSlider)
-	{
-		DayAndNightSlider->SetVisibility(ESlateVisibility::Collapsed);
-	}
-	if (Menu)
-	{
-		Menu->SetVisibility(ESlateVisibility::Collapsed);
-	}
+    // Do NOT hide/collapse Menu or WOverview
+    // Only hide/collapse other overlays if needed (e.g., filters, day/night slider)
+    if (WFilter)
+    {
+        WFilter->SetVisibility(ESlateVisibility::Collapsed);
+    }
+    if (DayAndNightSlider)
+    {
+        DayAndNightSlider->SetVisibility(ESlateVisibility::Collapsed);
+    }
+    // Menu and WOverview remain visible and interactable
 }
 
 void ATwinUiManager::ShowOverview()
