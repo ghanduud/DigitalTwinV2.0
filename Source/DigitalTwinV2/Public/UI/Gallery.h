@@ -46,4 +46,43 @@ protected:
 
 	UFUNCTION()
 	void OnExitButtonClicked();
+
+	// Add these to the protected section:
+	UPROPERTY(meta = (BindWidget))
+	class UButton* ButtonImage1;
+	UPROPERTY(meta = (BindWidget))
+	class UButton* ButtonImage2;
+	UPROPERTY(meta = (BindWidget))
+	class UButton* ButtonImage3;
+	UPROPERTY(meta = (BindWidget))
+	class UButton* ButtonImage4;
+	UPROPERTY(meta = (BindWidget))
+	class UButton* ButtonImage5;
+	UPROPERTY(meta = (BindWidget))
+	class UImage* Image_Large;
+
+	UFUNCTION()
+	void OnGalleryImage1Clicked();
+	UFUNCTION()
+	void OnGalleryImage2Clicked();
+	UFUNCTION()
+	void OnGalleryImage3Clicked();
+	UFUNCTION()
+	void OnGalleryImage4Clicked();
+	UFUNCTION()
+	void OnGalleryImage5Clicked();
+
+	// Add these to the protected section:
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Button_Arrow_Right;
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Button_Arrow_Left;
+
+	// Track the current index of the large image
+	int32 CurrentLargeImageIndex = 0;
+
+	UFUNCTION()
+	void OnArrowRightClicked();
+	UFUNCTION()
+	void OnArrowLeftClicked();
 };

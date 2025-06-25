@@ -22,11 +22,47 @@ void UGallery::NativeConstruct()
 {
 	Super::NativeConstruct();
 	// Widget setup logic (if needed)
-	// Example: Call SetGalleryImages with a test array or previously set array
-	// You should set GalleryImagesArray before this call, or override this in Blueprint to provide the images.
+	if (Button_Exit)
+	{
+		Button_Exit->OnClicked.AddDynamic(this, &UGallery::OnExitButtonClicked);
+	}
+	if (ButtonImage1)
+	{
+		ButtonImage1->OnClicked.AddDynamic(this, &UGallery::OnGalleryImage1Clicked);
+	}
+	if (ButtonImage2)
+	{
+		ButtonImage2->OnClicked.AddDynamic(this, &UGallery::OnGalleryImage2Clicked);
+	}
+	if (ButtonImage3)
+	{
+		ButtonImage3->OnClicked.AddDynamic(this, &UGallery::OnGalleryImage3Clicked);
+	}
+	if (ButtonImage4)
+	{
+		ButtonImage4->OnClicked.AddDynamic(this, &UGallery::OnGalleryImage4Clicked);
+	}
+	if (ButtonImage5)
+	{
+		ButtonImage5->OnClicked.AddDynamic(this, &UGallery::OnGalleryImage5Clicked);
+	}
+	if (Button_Arrow_Right)
+	{
+		Button_Arrow_Right->OnClicked.AddDynamic(this, &UGallery::OnArrowRightClicked);
+	}
+	if (Button_Arrow_Left)
+	{
+		Button_Arrow_Left->OnClicked.AddDynamic(this, &UGallery::OnArrowLeftClicked);
+	}
 	if (GalleryImagesArray.Num() > 0)
 	{
 		SetGalleryImages(GalleryImagesArray);
+	}
+	// Set default large image to match GalleryImage1 after images are loaded
+	if (GalleryImage1 && Image_Large)
+	{
+		Image_Large->SetBrush(GalleryImage1->GetBrush());
+		CurrentLargeImageIndex = 0;
 	}
 }
 
@@ -87,6 +123,70 @@ void UGallery::OnExitButtonClicked()
     else
     {
         SetVisibility(ESlateVisibility::Collapsed);
+    }
+}
+
+void UGallery::OnArrowRightClicked()
+{
+    // There are 5 images, wrap around
+    CurrentLargeImageIndex = (CurrentLargeImageIndex + 1) % 5;
+    ShowLargeImageByIndex(CurrentLargeImageIndex);
+}
+
+void UGallery::OnArrowLeftClicked()
+{
+    // Wrap around backwards
+    CurrentLargeImageIndex = (CurrentLargeImageIndex + 4) % 5;
+    ShowLargeImageByIndex(CurrentLargeImageIndex);
+}
+
+void UGallery::ShowLargeImageByIndex(int32 Index)
+{
+    UImage* Images[5] = { GalleryImage1, GalleryImage2, GalleryImage3, GalleryImage4, GalleryImage5 };
+    if (Image_Large && Images[Index])
+    {
+        Image_Large->SetBrush(Images[Index]->GetBrush());
+    }
+}
+
+void UGallery::OnGalleryImage1Clicked()
+{
+    if (GalleryImage1 && Image_Large)
+    {
+        CurrentLargeImageIndex = 0;
+        Image_Large->SetBrush(GalleryImage1->GetBrush());
+    }
+}
+void UGallery::OnGalleryImage2Clicked()
+{
+    if (GalleryImage2 && Image_Large)
+    {
+        CurrentLargeImageIndex = 1;
+        Image_Large->SetBrush(GalleryImage2->GetBrush());
+    }
+}
+void UGallery::OnGalleryImage3Clicked()
+{
+    if (GalleryImage3 && Image_Large)
+    {
+        CurrentLargeImageIndex = 2;
+        Image_Large->SetBrush(GalleryImage3->GetBrush());
+    }
+}
+void UGallery::OnGalleryImage4Clicked()
+{
+    if (GalleryImage4 && Image_Large)
+    {
+        CurrentLargeImageIndex = 3;
+        Image_Large->SetBrush(GalleryImage4->GetBrush());
+    }
+}
+void UGallery::OnGalleryImage5Clicked()
+{
+    if (GalleryImage5 && Image_Large)
+    {
+        CurrentLargeImageIndex = 4;
+        Image_Large->SetBrush(GalleryImage5->GetBrush());
     }
 }
 
