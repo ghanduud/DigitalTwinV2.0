@@ -134,6 +134,10 @@ void AGolfGameManager::BeginAdjustShot()
 	AccumulatedInput = FVector2D::ZeroVector;
 	OriginalStartRotation = CurrentStartActor->GetActorRotation();
 	RotationAngle = 0.0f;
+	if (GolfPlayer)
+	{
+		GolfPlayer->PlayBallAimLongMontage();
+	}
 }
 
 void AGolfGameManager::AdjustShot(const FVector2D& Delta)
@@ -160,7 +164,7 @@ void AGolfGameManager::AdjustShot(const FVector2D& Delta)
 		return;
 	}
 
-	CurrentPower = FMath::Clamp(CurrentPower - Delta.Y * 0.1f, 0.0f, 1.0f);
+	CurrentPower = FMath::Clamp(CurrentPower - Delta.Y * 0.1f, 0.2f, 1.0f);
 	RotationAngle = FMath::Clamp(RotationAngle - Delta.X, MinRotation, MaxRotation);
 
 	if (CurrentStartActor)
@@ -184,6 +188,11 @@ void AGolfGameManager::CancelShotAdjust()
 	AccumulatedInput = FVector2D::ZeroVector;
 	CurrentPower = 0;
 	UpdateTrajectorySpline({});
+	if (GolfPlayer)
+	{
+		GolfPlayer->StopBallAimLongMontage();
+	}
+	
 }
 
 // void AGolfGameManager::OnMouseReleaseAndResumeMontage()
@@ -229,6 +238,8 @@ void AGolfGameManager::Shoot()
 	bHasAdjusted = false;
 	RotationAngle = 0.0f;
 	// bShouldFollowBall = true;
+
+
 }
 
 FVector AGolfGameManager::ComputeLaunchVelocity() const
@@ -332,7 +343,6 @@ void AGolfGameManager::AfterShotSequence()
 	FVector BallForward = CurrentStartActor->GetActorForwardVector();
 	FVector BehindBallLocation = FinalLocation - BallForward * 60.0f;
 	BehindBallLocation.Z = FinalLocation.Z; // Match ball's Z (height)
-	// ThirdCharacter->SetActorLocation(BehindBallLocation);
 
 	SpawnBallAtCurrentPosition();
 	bIsWaitingForBallToStop = false; // ✅ Reset here
@@ -408,10 +418,10 @@ void AGolfGameManager::SpawnBallAtCurrentPosition()
 
 	if (ThirdCharacterClass)
 	{
-		if (ThirdCharacter)
+		if (GolfPlayer)
 		{
-			ThirdCharacter->Destroy();
-			ThirdCharacter = nullptr;
+			GolfPlayer->Destroy();
+			GolfPlayer = nullptr;
 		}
 
 		if (ThirdCharacterClass)
@@ -431,14 +441,14 @@ void AGolfGameManager::SpawnBallAtCurrentPosition()
 			FVector SpawnLocation = BallLocation - BallForward * 500 - BallRight * 200 + FVector(0, 0, CapsuleHalfHeight);
 			FRotator SpawnRotation = BallForward.Rotation();
 
-			ThirdCharacter = GetWorld()->SpawnActor<AGolfPlayer>(ThirdCharacterClass, SpawnLocation, SpawnRotation, CharacterSpawnParams);
+			GolfPlayer = GetWorld()->SpawnActor<AGolfPlayer>(ThirdCharacterClass, SpawnLocation, SpawnRotation, CharacterSpawnParams);
 
-			if (ThirdCharacter)
+			if (GolfPlayer)
 			{
 				FVector TargetLocation = BallLocation - BallRight * 200;
 				TargetLocation.Z += CapsuleHalfHeight;
 
-				ThirdCharacter->MoveTo(TargetLocation);
+				GolfPlayer->MoveTo(TargetLocation);
 			}
 		}
 	}
@@ -671,4 +681,39 @@ bool AGolfGameManager::IsBallGrounded() const
 
 	FHitResult HitResult;
 	return GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
+}
+
+// void AGolfGameManager::OnMouseButtonDown()
+// {
+//     UE_LOG(LogTemp, Warning, TEXT("OnMouseButtonDown: GolfPlayer is %s"), GolfPlayer ? TEXT("VALID") : TEXT("NULL"));
+//     if (CurrentShotType == EShotType::LongShot && GolfPlayer)
+//     {
+//         GolfPlayer->PlayBallAimLongMontage();
+//     }
+//     BeginAdjustShot();
+// }
+
+// void AGolfGameManager::OnMouseButtonUp()
+// {
+//     if (CurrentShotType == EShotType::LongShot && GolfPlayer)
+//     {
+//         // Play montage and delay shot
+//         PlayAimMontageAndDelayedShot();
+//     }
+//     else
+//     {
+//         // End shot adjustment and shoot immediately for other shot types
+//         CancelShotAdjust();
+//         Shoot();
+//     }
+// }
+
+void AGolfGameManager::PlayAimMontageAndDelayedShot()
+{
+    if (GolfPlayer)
+    {
+        GolfPlayer->PlayBallAimLongMontage();
+    }
+    // Delay Shoot() by 0.3 seconds
+    GetWorld()->GetTimerManager().SetTimer(AfterShotDelayHandle, this, &AGolfGameManager::Shoot, 1.0f, false);
 }
