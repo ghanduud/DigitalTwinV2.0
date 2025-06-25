@@ -20,9 +20,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Gallery")
 	void SetGalleryImages(const TArray<FString>& ImagePaths);
 
+	// Add this function declaration
+	UFUNCTION()
+	void ShowLargeImageByIndex(int32 Index);
+
 protected:
 	virtual void NativeConstruct() override;
 
+	// Add UPROPERTY for all image widgets
 	UPROPERTY(meta = (BindWidget))
 	class UImage* GalleryImage1;
 	UPROPERTY(meta = (BindWidget))
@@ -35,6 +40,8 @@ protected:
 	class UImage* GalleryImage5;
 	UPROPERTY(meta = (BindWidget))
 	class UButton* Button_Exit;
+	UPROPERTY(meta = (BindWidget))
+	class UImage* Image_Large;
 
 	// Array to hold image paths for the gallery, can be set from C++ or Blueprint
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Gallery")
@@ -58,8 +65,6 @@ protected:
 	class UButton* ButtonImage4;
 	UPROPERTY(meta = (BindWidget))
 	class UButton* ButtonImage5;
-	UPROPERTY(meta = (BindWidget))
-	class UImage* Image_Large;
 
 	UFUNCTION()
 	void OnGalleryImage1Clicked();
