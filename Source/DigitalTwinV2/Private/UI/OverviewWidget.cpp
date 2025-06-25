@@ -166,6 +166,8 @@ void UOverviewWidget::OnMediaGalleryClicked()
     {
         UE_LOG(LogTemp, Error, TEXT("UiManager is null in UOverviewWidget!"));
     }
+    // Collapse the overview when opening the gallery
+    SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UOverviewWidget::OnExitButtonClicked()

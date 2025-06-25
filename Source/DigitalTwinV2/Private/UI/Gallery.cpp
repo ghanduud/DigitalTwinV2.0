@@ -115,13 +115,13 @@ void UGallery::SetGalleryImages(const TArray<FString>& ImagePaths)
 
 void UGallery::OnExitButtonClicked()
 {
-    // Collapse the overview when exit is pressed, if UiManager and WOverview are valid
+    // Collapse the gallery itself
+    SetVisibility(ESlateVisibility::Collapsed);
+    // Show the overview if possible
     if (UiManager && UiManager->WOverview)
     {
-        UiManager->WOverview->SetVisibility(ESlateVisibility::Collapsed);
+        UiManager->WOverview->SetVisibility(ESlateVisibility::Visible);
     }
-    // Optionally, also collapse the gallery itself
-    SetVisibility(ESlateVisibility::Collapsed);
 }
 
 void UGallery::OnArrowRightClicked()
