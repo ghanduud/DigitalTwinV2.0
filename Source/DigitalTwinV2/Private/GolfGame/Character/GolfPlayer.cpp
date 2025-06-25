@@ -141,3 +141,15 @@ void AGolfPlayer::StopBallAimLongMontage()
     }
 }
 
+void AGolfPlayer::PlayBallAimChipMontage()
+{
+    if (BallAimChipMontage)
+    {
+        UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+        if (AnimInstance && !AnimInstance->Montage_IsPlaying(BallAimChipMontage))
+        {
+            AnimInstance->Montage_Play(BallAimChipMontage, 1.0f);
+        }
+    }
+}
+

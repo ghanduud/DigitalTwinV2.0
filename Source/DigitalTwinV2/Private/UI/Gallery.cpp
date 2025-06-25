@@ -6,6 +6,11 @@
 #include "Engine/Texture2D.h"
 #include "Engine/StreamableManager.h"
 #include "Engine/AssetManager.h"
+#include "Components/Button.h"
+#include "UI/TwinUiManager.h"
+
+// Explicitly include the header for the UiManager property
+#include "n:\UE5_courseGame\DigitalTwinV2.0\Source\DigitalTwinV2\Public\UI\Gallery.h"
 
 UGallery::UGallery(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -68,6 +73,20 @@ void UGallery::SetGalleryImages(const TArray<FString>& ImagePaths)
         {
             UE_LOG(LogTemp, Error, TEXT("Gallery: ImageWidget %d is null!"), i + 1);
         }
+    }
+}
+
+void UGallery::OnExitButtonClicked()
+{
+    // Use UiManager property directly from the header
+    if (this->UiManager)
+    {
+        SetVisibility(ESlateVisibility::Collapsed);
+        this->UiManager->ShowOverview();
+    }
+    else
+    {
+        SetVisibility(ESlateVisibility::Collapsed);
     }
 }
 

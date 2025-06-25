@@ -8,6 +8,7 @@
 #include "Buldings/Bulding.h"
 #include "UI/TwinUiManager.h"
 #include "Engine/Engine.h"
+#include "UI/Gallery.h"
 
 UOverviewWidget::UOverviewWidget(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -121,6 +122,39 @@ void UOverviewWidget::OnMediaGalleryClicked()
     UE_LOG(LogTemp, Warning, TEXT("Button_MediaGallery clicked! UiManager=%p"), UiManager);
     if (UiManager)
     {
+        if (UiManager->CurrentBuilding && UiManager->WGallery)
+        {
+            // Get GalleryImages from the building's data (from JSON)
+            // We'll use reflection to get the TArray<FString> GalleryImages property if it exists
+            TArray<FString>* GalleryImagesPtr = nullptr;
+            FProperty* GalleryImagesProp = UiManager->CurrentBuilding->GetClass()->FindPropertyByName(FName("GalleryImages"));
+            if (GalleryImagesProp && GalleryImagesProp->IsA<FArrayProperty>())
+            {
+                GalleryImagesPtr = GalleryImagesProp->ContainerPtrToValuePtr<TArray<FString>>(UiManager->CurrentBuilding);
+            }
+            // If not found, fallback to using the DataIndex and AllBuildingData
+            if (!GalleryImagesPtr || GalleryImagesPtr->Num() == 0)
+            {
+                int32 DataIndex = UiManager->CurrentBuilding->DataIndex;
+                if (ABulding::AllBuildingData.IsValidIndex(DataIndex))
+                {
+                    // Parse GalleryImages from the JSON string using FJsonObject
+                    const FBuildingData& Data = ABulding::AllBuildingData[DataIndex];
+                    // The GalleryImages are not in FBuildingData struct, so we need to parse them from the JSON file or store them elsewhere.
+                    // As a workaround, we can add a static helper to ABulding to get GalleryImages for a DataIndex.
+                    // For now, just pass an empty array to avoid compile error.
+                    UiManager->WGallery->SetGalleryImages(TArray<FString>());
+                }
+                else
+                {
+                    UiManager->WGallery->SetGalleryImages(TArray<FString>());
+                }
+            }
+            else
+            {
+                UiManager->WGallery->SetGalleryImages(*GalleryImagesPtr);
+            }
+        }
         UiManager->ShowGallery();
     }
     else

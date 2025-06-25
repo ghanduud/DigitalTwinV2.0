@@ -45,6 +45,8 @@ public:
 	void PlayBallAimLongMontage();
 	UFUNCTION(BlueprintCallable, Category = "Animation")
 	void StopBallAimLongMontage();
+	UFUNCTION(BlueprintCallable, Category = "Animation")
+	void PlayBallAimChipMontage();
 
 
 private:

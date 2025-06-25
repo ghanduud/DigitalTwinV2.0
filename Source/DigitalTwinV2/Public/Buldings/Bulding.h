@@ -53,6 +53,8 @@ struct FBuildingData
     FString Status;
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FString NumberOfFloors;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    TArray<FString> GalleryImages;
 };
 
 UCLASS()
@@ -60,73 +62,75 @@ class DIGITALTWINV2_API ABulding : public AActor
 {
     GENERATED_BODY()
 public:
-	ABulding();
-	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	int32 Id;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	int32 NumberOfRooms;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	float FootPrintArea;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	float BuldingUnitArea;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	float GroundFloorArea;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	float FirstFloorArea;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	float RoofFloorArea;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	float Price;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	float Discount;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	EBuildingStatus Status;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	EBuildingType BuildingType;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
-	FString ImagePath;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Info")
-	FString DisplayName;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Building Info")
+    ABulding();
+    virtual void BeginPlay() override;
+    virtual void Tick(float DeltaTime) override;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    int32 Id;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    int32 NumberOfRooms;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    float FootPrintArea;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    float BuldingUnitArea;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    float GroundFloorArea;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    float FirstFloorArea;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    float RoofFloorArea;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    float Price;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    float Discount;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    EBuildingStatus Status;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    EBuildingType BuildingType;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    FString ImagePath;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Info")
+    FString DisplayName;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Building Info")
     FString NumberOfFloors;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Data")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building Data")
     int32 DataIndex = 0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
     bool bIsAvailable = false;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Building")
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Building")
     bool bHasDiscount = false;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Building")
+    TArray<FString> GalleryImages;
 
     // Function to apply data from a struct
     void ApplyBuildingData(const struct FBuildingData& Data);
-	UFUNCTION(BlueprintCallable, Category = "Building")
-	float GetFinalPrice() const
-	{
-		return Price - (Price * Discount / 100.0f);
-	}
-	UFUNCTION(BlueprintCallable, Category = "Building")
-	FString GetStatusAsString() const
-	{
-		switch (Status)
-		{
-			case EBuildingStatus::Available: return TEXT("Available");
-			case EBuildingStatus::Reserved: return TEXT("Reserved");
-			case EBuildingStatus::Sold: return TEXT("Sold");
-			case EBuildingStatus::UnderConstruction: return TEXT("Under Construction");
-			default: return TEXT("Unknown");
-		}
-	}
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UStaticMeshComponent* Mesh;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
-	class UBoxComponent* BoxCollider;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    UFUNCTION(BlueprintCallable, Category = "Building")
+    float GetFinalPrice() const
+    {
+        return Price - (Price * Discount / 100.0f);
+    }
+    UFUNCTION(BlueprintCallable, Category = "Building")
+    FString GetStatusAsString() const
+    {
+        switch (Status)
+        {
+            case EBuildingStatus::Available: return TEXT("Available");
+            case EBuildingStatus::Reserved: return TEXT("Reserved");
+            case EBuildingStatus::Sold: return TEXT("Sold");
+            case EBuildingStatus::UnderConstruction: return TEXT("Under Construction");
+            default: return TEXT("Unknown");
+        }
+    }
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    class UStaticMeshComponent* Mesh;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+    class UBoxComponent* BoxCollider;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     UStaticMeshComponent* HighlightBox;
 
-	UFUNCTION()
+    UFUNCTION()
     void ShowHighlightBox(FLinearColor Color);
 
-	static TArray<FBuildingData> AllBuildingData;
+    static TArray<FBuildingData> AllBuildingData;
     static void LoadBuildingDataFromJson();
 };

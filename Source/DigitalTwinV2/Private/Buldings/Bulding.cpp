@@ -25,8 +25,24 @@ void ABulding::LoadBuildingDataFromJson()
         for (auto& Value : JsonArray)
         {
             FBuildingData Data;
-            if (FJsonObjectConverter::JsonObjectToUStruct(Value->AsObject().ToSharedRef(), &Data, 0, 0))
+            TArray<FString> GalleryImagesLocal; // Local array for gallery images
+            TSharedPtr<FJsonObject> JsonObj = Value->AsObject();
+            if (FJsonObjectConverter::JsonObjectToUStruct(JsonObj.ToSharedRef(), &Data, 0, 0))
             {
+                // Manually extract GalleryImages array
+                const TArray<TSharedPtr<FJsonValue>>* GalleryArray;
+                if (JsonObj->TryGetArrayField(TEXT("GalleryImages"), GalleryArray))
+                {
+                    Data.GalleryImages.Empty();
+                    for (const TSharedPtr<FJsonValue>& ImgVal : *GalleryArray)
+                    {
+                        FString ImgPath;
+                        if (ImgVal->TryGetString(ImgPath))
+                        {
+                            Data.GalleryImages.Add(ImgPath);
+                        }
+                    }
+                }
                 AllBuildingData.Add(Data);
             }
         }
@@ -45,6 +61,7 @@ void ABulding::ApplyBuildingData(const FBuildingData& Data)
     Price = Data.Price;
     Discount = Data.Discount;
     NumberOfFloors = Data.NumberOfFloors;
+    GalleryImages = Data.GalleryImages; // <-- Copy gallery images for UI
     // Status conversion
     if (Data.Status == "Available") Status = EBuildingStatus::Available;
     else if (Data.Status == "Reserved") Status = EBuildingStatus::Reserved;

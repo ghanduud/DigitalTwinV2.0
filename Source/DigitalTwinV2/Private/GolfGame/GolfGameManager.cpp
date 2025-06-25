@@ -188,10 +188,6 @@ void AGolfGameManager::CancelShotAdjust()
 	AccumulatedInput = FVector2D::ZeroVector;
 	CurrentPower = 0;
 	UpdateTrajectorySpline({});
-	if (GolfPlayer)
-	{
-		GolfPlayer->StopBallAimLongMontage();
-	}
 	
 }
 
@@ -712,8 +708,16 @@ void AGolfGameManager::PlayAimMontageAndDelayedShot()
 {
     if (GolfPlayer)
     {
-        GolfPlayer->PlayBallAimLongMontage();
+        if (CurrentShotType == EShotType::LongShot)
+        {
+            GolfPlayer->PlayBallAimLongMontage();
+        }
+        else if (CurrentShotType == EShotType::ChipShot)
+        {
+            GolfPlayer->StopBallAimLongMontage();
+        }
     }
     // Delay Shoot() by 0.3 seconds
-    GetWorld()->GetTimerManager().SetTimer(AfterShotDelayHandle, this, &AGolfGameManager::Shoot, 1.0f, false);
+    GetWorld()->GetTimerManager().SetTimer(AfterShotDelayHandle, this, &AGolfGameManager::Shoot, 0.3f, false);
+
 }

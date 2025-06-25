@@ -33,8 +33,17 @@ protected:
 	class UImage* GalleryImage4;
 	UPROPERTY(meta = (BindWidget))
 	class UImage* GalleryImage5;
+	UPROPERTY(meta = (BindWidget))
+	class UButton* Button_Exit;
 
 	// Array to hold image paths for the gallery, can be set from C++ or Blueprint
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Gallery")
 	TArray<FString> GalleryImagesArray;
+
+	// Add this property to allow access to the UI manager from the gallery
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Gallery")
+	class ATwinUiManager* UiManager;
+
+	UFUNCTION()
+	void OnExitButtonClicked();
 };
