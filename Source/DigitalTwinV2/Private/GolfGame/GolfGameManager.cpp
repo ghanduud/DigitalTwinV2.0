@@ -679,30 +679,6 @@ bool AGolfGameManager::IsBallGrounded() const
 	return GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_Visibility, Params);
 }
 
-// void AGolfGameManager::OnMouseButtonDown()
-// {
-//     UE_LOG(LogTemp, Warning, TEXT("OnMouseButtonDown: GolfPlayer is %s"), GolfPlayer ? TEXT("VALID") : TEXT("NULL"));
-//     if (CurrentShotType == EShotType::LongShot && GolfPlayer)
-//     {
-//         GolfPlayer->PlayBallAimLongMontage();
-//     }
-//     BeginAdjustShot();
-// }
-
-// void AGolfGameManager::OnMouseButtonUp()
-// {
-//     if (CurrentShotType == EShotType::LongShot && GolfPlayer)
-//     {
-//         // Play montage and delay shot
-//         PlayAimMontageAndDelayedShot();
-//     }
-//     else
-//     {
-//         // End shot adjustment and shoot immediately for other shot types
-//         CancelShotAdjust();
-//         Shoot();
-//     }
-// }
 
 void AGolfGameManager::PlayAimMontageAndDelayedShot()
 {
@@ -710,11 +686,13 @@ void AGolfGameManager::PlayAimMontageAndDelayedShot()
     {
         if (CurrentShotType == EShotType::LongShot)
         {
-            GolfPlayer->PlayBallAimLongMontage();
+            GolfPlayer->PlayBallAimLongMontage(); // While holding for long shot
+            GolfPlayer->PlayBallShootLongMontage(); // Before shoot
         }
         else if (CurrentShotType == EShotType::ChipShot)
         {
-            GolfPlayer->StopBallAimLongMontage();
+            GolfPlayer->PlayBallAimChipMontage(); // While holding for chip shot
+            GolfPlayer->PlayBallShootLongMontage(); // Before shoot (uses same shoot montage for both, or create PlayBallShootChipMontage if needed)
         }
     }
     // Delay Shoot() by 0.3 seconds

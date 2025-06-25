@@ -139,17 +139,47 @@ void AGolfPlayer::StopBallAimLongMontage()
     {
         UE_LOG(LogTemp, Error, TEXT("BallAimLongMontage is null in StopBallAimLongMontage"));
     }
-}
+}	
 
 void AGolfPlayer::PlayBallAimChipMontage()
 {
     if (BallAimChipMontage)
     {
         UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-        if (AnimInstance && !AnimInstance->Montage_IsPlaying(BallAimChipMontage))
+        if (AnimInstance)
         {
             AnimInstance->Montage_Play(BallAimChipMontage, 1.0f);
+            UE_LOG(LogTemp, Warning, TEXT("Playing BallAimChipMontage"));
         }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("AnimInstance is null in PlayBallAimChipMontage"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("BallAimChipMontage is null in PlayBallAimChipMontage"));
+    }
+}
+
+void AGolfPlayer::PlayBallShootLongMontage()
+{
+    if (BallShootChipMontage)
+    {
+        UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+        if (AnimInstance)
+        {
+            AnimInstance->Montage_Play(BallShootChipMontage, 1.0f);
+            UE_LOG(LogTemp, Warning, TEXT("Playing BallShootChipMontage"));
+        }
+        else
+        {
+            UE_LOG(LogTemp, Error, TEXT("AnimInstance is null in PlayBallShootChipMontage"));
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Error, TEXT("BallShootChipMontage is null in PlayBallShootChipMontage"));
     }
 }
 

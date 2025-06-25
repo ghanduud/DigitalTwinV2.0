@@ -3,7 +3,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+
 #include "GolfGameManager.generated.h"
+
+class AGolfPlayer; // Forward declaration for AGolfPlayer
 
 // Enumeration to define different shot types
 UENUM(BlueprintType)
@@ -33,7 +36,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Golf|Shot") void BeginAdjustShot();
 	UFUNCTION(BlueprintCallable, Category = "Golf|Shot") void AdjustShot(const FVector2D& Delta);
 	UFUNCTION(BlueprintCallable, Category = "Golf|Shot") void CancelShotAdjust();
-	UFUNCTION(BlueprintCallable, Category = "Golf|Shot") void Shoot();
+	UFUNCTION(BlueprintCallable, Category = "Golf|Shot") void Shoot(); // Declaration only, no body here
 	UFUNCTION(BlueprintCallable, Category = "Golf|Shot") void SetShotTypeToLong();
 	UFUNCTION(BlueprintCallable, Category = "Golf|Shot") void SetShotTypeToChip();
 	UFUNCTION(BlueprintCallable, Category = "Golf|Sequence") void StartGameSequence();
